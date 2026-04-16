@@ -60,42 +60,40 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function fetchData() {
-      try {
-        const [recent, published, drafts, breaking, top100, top5, cats, adsData] =
-          await Promise.all([
-            listArticles(undefined, 5, 0),
-            listArticles({ isPublished: true }, 1, 0),
-            listArticles({ isPublished: false }, 1, 0),
-            listArticles({ isBreaking: true }, 1, 0),
-            listArticles({ isPublished: true }, 100, 0),
-            getMostViewedArticles(10),
-            listCategories(),
-            listAds(),
-          ]);
+      const safe = <T>(p: Promise<T>, fallback: T): Promise<T> =>
+        p.catch((e) => { console.warn("[Dashboard]", e?.message ?? e); return fallback; });
 
-        if (!cancelled) {
-          setRecentArticles(recent.articles);
-          setTotalArticles(recent.total);
-          setPublishedCount(published.total);
-          setDraftCount(drafts.total);
-          setBreakingCount(breaking.total);
-          setTotalViews(
-            top100.articles.reduce((sum, a) => sum + (a.views || 0), 0)
-          );
-          setMostViewed(top5[0] ?? null);
-          setTopArticles(top5);
-          setTop100Articles(top100.articles);
-          setCategories(cats);
-          setAds(adsData);
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (!cancelled) setLoading(false);
+      const [recent, published, drafts, breaking, top100, top5, cats, adsData] =
+        await Promise.all([
+          safe(listArticles(undefined, 5, 0), { articles: [], total: 0 }),
+          safe(listArticles({ isPublished: true }, 1, 0), { articles: [], total: 0 }),
+          safe(listArticles({ isPublished: false }, 1, 0), { articles: [], total: 0 }),
+          safe(listArticles({ isBreaking: true }, 1, 0), { articles: [], total: 0 }),
+          safe(listArticles({ isPublished: true }, 100, 0), { articles: [], total: 0 }),
+          safe(getMostViewedArticles(10), [] as Article[]),
+          safe(listCategories(), [] as Category[]),
+          safe(listAds(), [] as Ad[]),
+        ]);
+
+      if (!cancelled) {
+        setRecentArticles(recent.articles);
+        setTotalArticles(recent.total);
+        setPublishedCount(published.total);
+        setDraftCount(drafts.total);
+        setBreakingCount(breaking.total);
+        setTotalViews(
+          top100.articles.reduce((sum, a) => sum + (a.views || 0), 0)
+        );
+        setMostViewed(top5[0] ?? null);
+        setTopArticles(top5);
+        setTop100Articles(top100.articles);
+        setCategories(cats);
+        setAds(adsData);
+        setLoading(false);
       }
     }
 
-    fetchData();
+    fetchData().finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
