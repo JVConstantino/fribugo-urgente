@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #dc2626;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1e293b;
+  --color-secondary-foreground: #ffffff;
+  --color-accent: #f97316;
+  --color-accent-foreground: #ffffff;
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #dc2626;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* ===== Base Styles ===== */
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Scrollbar ===== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-foreground);
+}
+
+/* ===== Breaking News Ticker Animation ===== */
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.breaking-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker-scroll var(--ticker-duration, 30s) linear infinite;
+}
+
+.breaking-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* ===== Prose Styles (Article Content) ===== */
+
+.prose {
+  max-width: 72ch;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-foreground);
+}
+
+.prose h1 {
+  font-size: 2.25em;
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose strong {
+  font-weight: 700;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: var(--color-muted-foreground);
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  margin: 2em 0;
+}
+
+.prose figure {
+  margin: 2em 0;
+}
+
+.prose figcaption {
+  text-align: center;
+  font-size: 0.875em;
+  color: var(--color-muted-foreground);
+  margin-top: 0.5em;
+}
+
+.prose h2 + p,
+.prose h3 + p {
+  margin-top: 0;
+}
+
+/* ===== Focus Styles ===== */
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ===== Selection ===== */
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* ===== Placeholder ===== */
+
+::placeholder {
+  color: var(--color-muted-foreground);
+  opacity: 1;
+}
