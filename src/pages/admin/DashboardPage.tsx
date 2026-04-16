@@ -60,7 +60,7 @@ export default function DashboardPage() {
     let cancelled = false;
 
     async function fetchData() {
-      const safe = <T>(p: Promise<T>, fallback: T): Promise<T> =>
+      const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> =>
         p.catch((e) => { console.warn("[Dashboard]", e?.message ?? e); return fallback; });
 
       const [recent, published, drafts, breaking, top100, top5, cats, adsData] =
