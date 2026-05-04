@@ -22,6 +22,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Offcanvas,
+  OffcanvasTrigger,
+  OffcanvasContent,
+} from "@/components/ui/offcanvas";
 
 // ─── Weather helpers ─────────────────────────────────────────────────────────
 
@@ -271,26 +276,29 @@ export function Header() {
               )}
             </div>
 
-            {/* Mobile hamburger — always on the right */}
-            <button
-              className="md:hidden p-2 text-foreground hover:text-primary transition-colors rounded-md hover:bg-muted"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile hamburger — offcanvas trigger */}
+            <Offcanvas open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <OffcanvasTrigger asChild>
+                <button
+                  className="md:hidden p-2 text-foreground hover:text-primary transition-colors rounded-md hover:bg-muted"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </OffcanvasTrigger>
+            </Offcanvas>
           </div>
 
         </div>
       </div>
 
-      {/* ── Mobile Menu ── */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <div className="px-4 py-3 space-y-1">
+      {/* ── Mobile Offcanvas Menu ── */}
+      <Offcanvas open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <OffcanvasContent className="p-4">
+          <div className="space-y-1 mt-12">
 
             {/* Weather + Clock in mobile menu */}
-            <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 mb-3">
+            <div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2 mb-3">
               <span className="text-xs text-muted-foreground tabular-nums">
                 🕐 {clockStr}
               </span>
@@ -380,8 +388,8 @@ export function Header() {
               </Link>
             )}
           </div>
-        </div>
-      )}
+        </OffcanvasContent>
+      </Offcanvas>
     </header>
   );
 }
