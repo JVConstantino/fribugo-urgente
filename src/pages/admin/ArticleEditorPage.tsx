@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, Image } from "lucide-react";
 
 import {
   getArticleById,
@@ -26,6 +26,7 @@ import {
 import { slugify } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { MediaGallery } from "@/components/admin/MediaGallery";
 
 export default function ArticleEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,7 @@ export default function ArticleEditorPage() {
   const [coverImageId, setCoverImageId] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Meta
@@ -174,6 +176,15 @@ export default function ArticleEditorPage() {
     await deleteFile(coverImageId).catch(() => {});
     setCoverImageId(null);
     setCoverPreviewUrl(null);
+  }
+
+  function handleSelectFromGallery(fileId: string, fileUrl: string) {
+    setCoverImageId(fileId);
+    setCoverPreviewUrl(fileUrl);
+    toast({
+      title: "Imagem selecionada",
+      description: "A imagem foi definida como capa do artigo.",
+    });
   }
 
   function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -465,16 +476,28 @@ export default function ArticleEditorPage() {
               )}
 
               {!coverPreviewUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => coverInputRef.current?.click()}
-                  disabled={uploadingCover}
-                >
-                  <Upload className="h-4 w-4" />
-                  {uploadingCover ? "Enviando..." : "Enviar imagem"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={uploadingCover}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploadingCover ? "Enviando..." : "Enviar"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setGalleryOpen(true)}
+                    disabled={uploadingCover}
+                  >
+                    <Image className="h-4 w-4" />
+                    Galeria
+                  </Button>
+                </div>
               )}
 
               <input
@@ -516,6 +539,12 @@ export default function ArticleEditorPage() {
           </Card>
         </div>
       </div>
+
+      <MediaGallery
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        onSelect={handleSelectFromGallery}
+      />
     </div>
   );
 }

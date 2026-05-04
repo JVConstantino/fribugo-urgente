@@ -446,6 +446,10 @@ export async function uploadFile(file: File): Promise<Models.File> {
   return storage.createFile(STORAGE_BUCKET_ID, ID.unique(), file);
 }
 
+export async function listFiles(): Promise<Models.FileList> {
+  return storage.listFiles(STORAGE_BUCKET_ID);
+}
+
 export function getFilePreview(fileId: string): string {
   const result = storage.getFilePreview(STORAGE_BUCKET_ID, fileId);
   return typeof result === "string" ? result : (result as { href: string }).href;
