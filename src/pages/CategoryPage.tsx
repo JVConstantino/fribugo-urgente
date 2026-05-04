@@ -139,11 +139,14 @@ export default function CategoryPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-3">
-            <span
-              className="h-4 w-4 rounded-full"
-              style={{ backgroundColor: category.color }}
-            />
-            <h1 className="text-3xl font-bold">{category.name}</h1>
+            {category.icon && <span className="text-4xl">{category.icon}</span>}
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-full"
+                style={{ backgroundColor: category.color }}
+              />
+              <h1 className="text-3xl font-bold">{category.name}</h1>
+            </div>
           </div>
           <Separator className="mt-4" />
         </div>
@@ -184,13 +187,14 @@ export default function CategoryPage() {
                         {cat && (
                           <Badge
                             variant="secondary"
-                            className="text-xs"
+                            className="text-xs flex items-center gap-1"
                             style={{
                               backgroundColor: cat.color,
                               color: "#fff",
                               borderColor: "transparent",
                             }}
                           >
+                            {cat.icon && <span>{cat.icon}</span>}
                             {cat.name}
                           </Badge>
                         )}

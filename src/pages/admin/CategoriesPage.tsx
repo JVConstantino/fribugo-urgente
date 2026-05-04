@@ -26,6 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { DEFAULT_CATEGORY_COLORS, SLUG_PATTERN } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -342,14 +343,12 @@ export default function CategoriesPage() {
             {/* Icon */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Ícone (emoji)</label>
-              <Input
-                placeholder="Ex: 🏛️"
+              <EmojiPicker
                 value={form.icon}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, icon: e.target.value }))
+                onChange={(emoji) =>
+                  setForm((prev) => ({ ...prev, icon: emoji }))
                 }
                 disabled={saving}
-                maxLength={4}
               />
             </div>
 

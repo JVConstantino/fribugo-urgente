@@ -202,12 +202,13 @@ export default function HomePage() {
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors flex items-center gap-2 ${
                 selectedCategory === cat.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
+              {cat.icon && <span className="text-base">{cat.icon}</span>}
               {cat.name}
             </button>
           ))}
@@ -387,8 +388,9 @@ function HeroSection({
             {category && (
               <Badge
                 style={{ backgroundColor: category.color, color: "#fff" }}
-                className="text-xs"
+                className="text-xs flex items-center gap-1"
               >
+                {category.icon && <span>{category.icon}</span>}
                 {category.name}
               </Badge>
             )}
@@ -453,13 +455,14 @@ function ArticleCard({
             <Link to={`/categoria/${category.slug}`}>
               <Badge
                 variant="secondary"
-                className="text-xs"
+                className="text-xs flex items-center gap-1"
                 style={{
                   backgroundColor: category.color,
                   color: "#fff",
                   borderColor: "transparent",
                 }}
               >
+                {category.icon && <span>{category.icon}</span>}
                 {category.name}
               </Badge>
             </Link>
