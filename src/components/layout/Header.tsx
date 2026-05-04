@@ -178,8 +178,7 @@ export function Header() {
             className="flex items-center gap-2 shrink-0"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <img src="/logo-navbar.png" alt="Friburgo Urgente" className="hidden sm:block h-24 w-auto" />
-            <img src="/logo-icon.png" alt="Friburgo Urgente" className="block sm:hidden h-16 w-auto" />
+            <img src="/logo-navbar.png" alt="Friburgo Urgente" className="h-24 w-auto" />
           </Link>
 
           {/* Desktop Navigation — absolutely centered */}
