@@ -349,6 +349,7 @@ export default function CategoriesPage() {
                   setForm((prev) => ({ ...prev, icon: emoji }))
                 }
                 disabled={saving}
+                categorySlug={form.slug}
               />
             </div>
 

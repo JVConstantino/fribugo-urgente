@@ -12,13 +12,13 @@ const EMOJI_CATEGORIES = {
     "📰", "📺", "📻", "📡", "🗞️", "📢", "📣", "💬", "🗣️", "📝", "✍️", "📄", "📃", "📋", "📑",
   ],
   "🏛️ Governo": [
-    "🏛️", "🏤", "🏢", "⚖️", "👨‍⚖️", "👩‍⚖️", "🔨", "📜", "🎖️", "🏅", "🥇", "🥈", "🥉",
+    "🏛️", "🏤", "🏢", "⚖️", "🔨", "📜", "🎖️", "🏅", "🥇", "🥈", "🥉", "👨‍⚖️", "👩‍⚖️", "🏆", "📋",
   ],
   "💰 Economia": [
     "💰", "💵", "💴", "💶", "💷", "💳", "🏦", "💸", "💲", "💱", "📈", "📉", "📊", "💹", "🤑",
   ],
   "🏥 Saúde": [
-    "🏥", "⚕️", "💊", "💉", "🩺", "🩹", "🧬", "🦠", "🧘", "🏃", "🚴", "🏋️", "⛹️", "🤸",
+    "🏥", "⚕️", "💊", "💉", "🩺", "🩹", "🧬", "🦠", "🧘", "🏃", "🚴", "🏋️", "⛹️", "🤸", "❤️",
   ],
   "🎓 Educação": [
     "🎓", "🏫", "📚", "📖", "📕", "📗", "📘", "📙", "✏️", "✒️", "🖊️", "🖍️", "📐", "📏", "🎒",
@@ -27,13 +27,13 @@ const EMOJI_CATEGORIES = {
     "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎳", "🏏", "🏑", "🏒", "🥍", "🏓",
   ],
   "🎬 Entretenimento": [
-    "🎬", "🎥", "📹", "📷", "📸", "🎞️", "🎭", "🎪", "🎨", "🎬", "🎤", "🎧", "🎮", "🎯", "🎲",
+    "🎬", "🎥", "📹", "📷", "📸", "🎞️", "🎭", "🎪", "🎨", "🎤", "🎧", "🎮", "🎯", "🎲", "🎸",
   ],
   "🍔 Alimentos": [
     "🍔", "🍕", "🌭", "🥪", "🥙", "🧆", "🌮", "🌯", "🥗", "🍝", "🍜", "🍲", "🥘", "🍱", "🍛",
   ],
   "🚗 Transporte": [
-    "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚐", "✈️",
+    "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🛻", "🚚", "🚛", "🚁", "✈️", "🚀",
   ],
   "🌍 Natureza": [
     "🌍", "🌎", "🌏", "🌿", "🍀", "🌱", "🌾", "💐", "🌷", "🌹", "🥀", "🌺", "🌻", "🌼", "🌞",
@@ -46,22 +46,39 @@ const EMOJI_CATEGORIES = {
   ],
 };
 
+export const CATEGORY_ICON_SUGGESTIONS: Record<string, string> = {
+  politica: "🏛️",
+  seguranca: "🚨",
+  saude: "🏥",
+  educacao: "🎓",
+  economia: "💰",
+  esportes: "⚽",
+  entretenimento: "🎬",
+  alimentos: "🍔",
+  transporte: "🚗",
+  natureza: "🌍",
+  noticias: "📰",
+  governo: "🏛️",
+};
+
 interface EmojiPickerProps {
   value: string;
   onChange: (emoji: string) => void;
   disabled?: boolean;
+  categorySlug?: string;
 }
 
-export function EmojiPicker({ value, onChange, disabled }: EmojiPickerProps) {
+export function EmojiPicker({ value, onChange, disabled, categorySlug }: EmojiPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("⭐ Populares");
+
+  const suggestedEmoji = categorySlug ? CATEGORY_ICON_SUGGESTIONS[categorySlug.toLowerCase()] : undefined;
 
   const filteredEmojis = useMemo(() => {
     if (!search) {
       return EMOJI_CATEGORIES[activeCategory as keyof typeof EMOJI_CATEGORIES] || [];
     }
-    const searchLower = search.toLowerCase();
     const results: string[] = [];
     Object.values(EMOJI_CATEGORIES).forEach((emojis) => {
       results.push(...emojis);
@@ -84,6 +101,19 @@ export function EmojiPicker({ value, onChange, disabled }: EmojiPickerProps) {
       <PopoverContent className="w-96" align="start">
         <div className="space-y-3">
           <label className="text-sm font-medium">Selecione um emoji</label>
+
+          {suggestedEmoji && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(suggestedEmoji);
+                setOpen(false);
+              }}
+              className="w-full p-2 rounded bg-primary/10 hover:bg-primary/20 transition-colors text-sm font-medium text-left"
+            >
+              💡 Sugestão: <span className="text-xl ml-2">{suggestedEmoji}</span>
+            </button>
+          )}
 
           {/* Search */}
           <Input
@@ -115,9 +145,9 @@ export function EmojiPicker({ value, onChange, disabled }: EmojiPickerProps) {
 
           {/* Emoji grid */}
           <div className="grid grid-cols-8 gap-1 max-h-56 overflow-y-auto">
-            {filteredEmojis.map((emoji) => (
+            {filteredEmojis.map((emoji, index) => (
               <button
-                key={emoji}
+                key={`${emoji}-${index}`}
                 onClick={() => {
                   onChange(emoji);
                   setOpen(false);
