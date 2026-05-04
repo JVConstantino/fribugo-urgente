@@ -278,6 +278,9 @@ export default function CategoriesPage() {
             <DialogTitle>
               {editingCategory ? "Editar categoria" : "Nova categoria"}
             </DialogTitle>
+            <DialogDescription>
+              {editingCategory ? "Atualize as informações da categoria." : "Crie uma nova categoria para organizar as notícias."}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
