@@ -178,9 +178,8 @@ export function Header() {
             className="flex items-center gap-2 shrink-0"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <span className="text-2xl font-black tracking-tight text-primary">
-              {APP_NAME.toUpperCase()}
-            </span>
+            <img src="/logo.png" alt="Friburgo Urgente" className="hidden sm:block h-10 w-auto" />
+            <img src="/logo-icon.png" alt="Friburgo Urgente" className="block sm:hidden h-9 w-auto" />
           </Link>
 
           {/* Desktop Navigation — absolutely centered */}
