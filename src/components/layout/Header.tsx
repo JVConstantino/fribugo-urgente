@@ -26,6 +26,7 @@ import {
   Offcanvas,
   OffcanvasTrigger,
   OffcanvasContent,
+  OffcanvasClose,
 } from "@/components/ui/offcanvas";
 
 // ─── Weather helpers ─────────────────────────────────────────────────────────
@@ -294,8 +295,20 @@ export function Header() {
 
       {/* ── Mobile Offcanvas Menu ── */}
       <Offcanvas open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <OffcanvasContent className="p-4">
-          <div className="space-y-1 mt-12">
+        <OffcanvasContent className="p-0 flex flex-col">
+          {/* Offcanvas Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 className="text-lg font-semibold">MENU</h2>
+            <OffcanvasClose asChild>
+              <button className="p-2 text-foreground hover:text-primary transition-colors rounded-md hover:bg-muted" aria-label="Fechar menu">
+                <X className="h-6 w-6" />
+              </button>
+            </OffcanvasClose>
+          </div>
+
+          {/* Offcanvas Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-1 px-4 py-3">
 
             {/* Weather + Clock in mobile menu */}
             <div className="flex flex-col gap-2 rounded-md bg-muted/50 px-3 py-2 mb-3">
@@ -387,6 +400,7 @@ export function Header() {
                 Painel Admin
               </Link>
             )}
+            </div>
           </div>
         </OffcanvasContent>
       </Offcanvas>
