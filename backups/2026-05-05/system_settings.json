@@ -1,0 +1,17 @@
+[
+  {
+    "key": "n8n_webhook_url",
+    "value": "https://friburgourgente-n8n.veuxld.easypanel.host/webhook-test/2aad6702-108c-4ed5-9a3b-a57bc6698a29",
+    "$id": "69f8c5650007406f4d7c",
+    "$sequence": 2,
+    "$createdAt": "2026-05-04T16:12:20.305+00:00",
+    "$updatedAt": "2026-05-04T16:12:20.305+00:00",
+    "$permissions": [
+      "read(\"user:69f7e344001e2ec3bc0b\")",
+      "update(\"user:69f7e344001e2ec3bc0b\")",
+      "delete(\"user:69f7e344001e2ec3bc0b\")"
+    ],
+    "$databaseId": "friburgourgente",
+    "$collectionId": "system_settings"
+  }
+]

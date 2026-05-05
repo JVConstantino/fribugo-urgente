@@ -11,6 +11,8 @@ import {
   BarChart2,
   MousePointerClick,
   Eye,
+  Search,
+  XCircle,
 } from "lucide-react";
 import {
   listAds,
@@ -21,7 +23,7 @@ import {
   getFileView,
   deleteFile,
 } from "@/services/appwrite";
-import type { Ad, CreateAdData, UpdateAdData, AdFormat, AdPage } from "@/types";
+import type { Ad, AdFormat, AdPage, CreateAdData, UpdateAdData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +42,13 @@ import {
   ALLOWED_IMAGE_TYPES,
 } from "@/lib/constants";
 import { toast } from "@/hooks/use-toast";
+
+const FORMAT_DIMENSIONS: Record<AdFormat, { label: string; hint: string }> = {
+  leaderboard: { label: "Leaderboard", hint: "728×90 px — topo do site" },
+  banner: { label: "Banner", hint: "468×60 px — conteúdo" },
+  sidebar: { label: "Sidebar", hint: "300×250 px — lateral" },
+  square: { label: "Quadrado", hint: "250×250 px — flexível" },
+};
 
 // ===== Constants =====
 
@@ -80,6 +89,7 @@ interface AdFormData {
   startsAt: string;
   endsAt: string;
   isActive: boolean;
+  dailyLimit: number | null;
 }
 
 const emptyForm = (): AdFormData => ({
@@ -91,6 +101,7 @@ const emptyForm = (): AdFormData => ({
   startsAt: toLocalDateTimeInput(new Date().toISOString()),
   endsAt: toLocalDateTimeInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()),
   isActive: true,
+  dailyLimit: null,
 });
 
 // ===== Helper =====
@@ -119,6 +130,9 @@ export default function AdsPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const [filterFormat, setFilterFormat] = useState<AdFormat | "all">("all");
 
   useEffect(() => {
     fetchAds();
@@ -134,6 +148,13 @@ export default function AdsPage() {
       setLoading(false);
     }
   }
+
+  const filteredAds = ads.filter((ad) => {
+    const matchesSearch = ad.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || (filterStatus === "active" && isAdRunning(ad)) || (filterStatus === "inactive" && !isAdRunning(ad));
+    const matchesFormat = filterFormat === "all" || ad.format === filterFormat;
+    return matchesSearch && matchesStatus && matchesFormat;
+  });
 
   function openCreate() {
     setEditingAd(null);
@@ -153,6 +174,7 @@ export default function AdsPage() {
       startsAt: toLocalDateTimeInput(ad.startsAt),
       endsAt: toLocalDateTimeInput(ad.endsAt),
       isActive: ad.isActive,
+      dailyLimit: ad.dailyLimit,
     });
     setImagePreviewUrl(ad.imageId ? getFileView(ad.imageId) : null);
     setDialogOpen(true);
@@ -211,6 +233,14 @@ export default function AdsPage() {
   function validateForm(): string | null {
     if (!form.title.trim()) return "O título é obrigatório.";
     if (!form.linkUrl.trim()) return "A URL de destino é obrigatória.";
+    try {
+      const url = new URL(form.linkUrl.trim());
+      if (!["http:", "https:"].includes(url.protocol)) {
+        return "A URL deve começar com http:// ou https://";
+      }
+    } catch {
+      return "A URL de destino é inválida.";
+    }
     if (form.pages.length === 0) return "Selecione ao menos uma página.";
     if (!form.startsAt || !form.endsAt) return "Defina o período de veiculação.";
     if (new Date(form.endsAt) <= new Date(form.startsAt))
@@ -290,7 +320,48 @@ export default function AdsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Todos os anúncios</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg">Todos os anúncios</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Buscar título..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 w-44 text-xs"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
+                className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="all">Todos status</option>
+                <option value="active">No ar</option>
+                <option value="inactive">Inativos</option>
+              </select>
+              <select
+                value={filterFormat}
+                onChange={(e) => setFilterFormat(e.target.value as AdFormat | "all")}
+                className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value="all">Todos formatos</option>
+                <option value="leaderboard">Leaderboard</option>
+                <option value="banner">Banner</option>
+                <option value="sidebar">Sidebar</option>
+                <option value="square">Quadrado</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
@@ -308,9 +379,17 @@ export default function AdsPage() {
                 Criar primeiro anúncio
               </Button>
             </div>
+          ) : filteredAds.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Search className="mb-3 h-8 w-8 text-muted-foreground" />
+              <p className="text-muted-foreground">Nenhum anúncio encontrado com os filtros aplicados.</p>
+              <Button variant="outline" className="mt-3" onClick={() => { setSearchQuery(""); setFilterStatus("all"); setFilterFormat("all"); }}>
+                Limpar filtros
+              </Button>
+            </div>
           ) : (
             <div className="divide-y">
-              {ads.map((ad) => {
+              {filteredAds.map((ad) => {
                 const running = isAdRunning(ad);
                 return (
                   <div
@@ -486,6 +565,9 @@ export default function AdsPage() {
                   </option>
                 ))}
               </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {FORMAT_DIMENSIONS[form.format].hint}
+              </p>
             </div>
 
             {/* Pages */}

@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Teste 2",
+    "imageId": "69f813c9002d7f28ebd1",
+    "linkUrl": "google.com",
+    "isActive": true,
+    "startsAt": "2026-04-03T11:34:00.000+00:00",
+    "endsAt": "2026-05-16T11:34:00.000+00:00",
+    "impressions": 95,
+    "clicks": 0,
+    "format": "sidebar",
+    "pages": [
+      "home",
+      "all",
+      "category",
+      "article"
+    ],
+    "$id": "69e0c9a00006e991cf90",
+    "$sequence": 8,
+    "$createdAt": "2026-05-03T23:56:54.078+00:00",
+    "$updatedAt": "2026-05-05T00:11:21.310+00:00",
+    "$permissions": [],
+    "$databaseId": "friburgourgente",
+    "$collectionId": "ads"
+  },
+  {
+    "title": "Teste 3",
+    "imageId": "69f81381001a46042013",
+    "linkUrl": "google.com",
+    "isActive": true,
+    "startsAt": "2026-04-02T11:38:00.000+00:00",
+    "endsAt": "2026-05-23T11:38:00.000+00:00",
+    "impressions": 119,
+    "clicks": 0,
+    "format": "banner",
+    "pages": [
+      "home",
+      "all",
+      "category",
+      "article"
+    ],
+    "$id": "69e0ca580020abd3dbeb",
+    "$sequence": 9,
+    "$createdAt": "2026-05-03T23:56:54.317+00:00",
+    "$updatedAt": "2026-05-05T00:11:22.138+00:00",
+    "$permissions": [],
+    "$databaseId": "friburgourgente",
+    "$collectionId": "ads"
+  }
+]

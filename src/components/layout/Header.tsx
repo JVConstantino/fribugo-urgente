@@ -11,11 +11,12 @@ import {
   MessageCircle,
   MapPin,
   Cloud,
+  Send,
 } from "lucide-react";
 import { listCategories } from "@/services/appwrite";
 import { useAuth } from "@/contexts/AuthContext";
+import { AdBanner } from "@/components/shared/AdBanner";
 import type { Category } from "@/types";
-import { APP_NAME } from "@/lib/constants";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -154,6 +155,13 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 bg-background border-b border-border">
 
+      {/* ── Leaderboard Ad Slot ── */}
+      <div className="border-b border-border/50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2">
+          <AdBanner page="home" format="leaderboard" className="hidden md:block" />
+        </div>
+      </div>
+
       {/* ── Utility bar: clock + weather ── */}
       <div className="border-b border-border/50 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-8">
@@ -230,6 +238,14 @@ export function Header() {
             >
               <MessageCircle className="h-4 w-4" />
               Grupos
+            </Link>
+
+            <Link
+              to="/enviar-noticia"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-muted"
+            >
+              <Send className="h-4 w-4" />
+              Enviar notícia
             </Link>
 
             {isAdmin && (
@@ -388,6 +404,15 @@ export function Header() {
             >
               <MessageCircle className="h-4 w-4" />
               Grupos de WhatsApp
+            </Link>
+
+            <Link
+              to="/enviar-noticia"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              Enviar notícia
             </Link>
 
             {isAdmin && (

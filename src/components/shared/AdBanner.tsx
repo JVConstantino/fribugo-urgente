@@ -2,13 +2,49 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { listAds, incrementAdImpression, incrementAdClick, getFileView } from "@/services/appwrite";
 import type { Ad, AdFormat, AdPage } from "@/types";
 
+// ── Daily impression tracking ──────────────────────────────────────────────
+
+function getTodayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getDailyImpressions(adId: string): number {
+  try {
+    const key = `ad_imp_${adId}_${getTodayKey()}`;
+    return parseInt(localStorage.getItem(key) || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+function trackDailyImpression(adId: string): void {
+  try {
+    const key = `ad_imp_${adId}_${getTodayKey()}`;
+    const current = getDailyImpressions(adId);
+    localStorage.setItem(key, String(current + 1));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+function hasReachedDailyLimit(ad: Ad): boolean {
+  if (!ad.dailyLimit || ad.dailyLimit <= 0) return false;
+  return getDailyImpressions(ad.id) >= ad.dailyLimit;
+}
+
 interface AdBannerProps {
   page: AdPage;
   format: AdFormat;
   className?: string;
-  /** Sidebar only: show up to this many stacked ads (default 1) */
   maxCount?: number;
 }
+
+const FORMAT_DIMENSIONS: Record<AdFormat, { width: number; height: number; containerClass?: string; imgClass?: string }> = {
+  leaderboard: { width: 728, height: 90, containerClass: "mx-auto max-w-[728px]", imgClass: "h-[90px]" },
+  banner: { width: 468, height: 60, containerClass: "mx-auto max-w-[468px]", imgClass: "h-[60px]" },
+  sidebar: { width: 300, height: 250, containerClass: "w-full max-w-[300px] mx-auto", imgClass: "w-full aspect-[300/250]" },
+  square: { width: 250, height: 250, containerClass: "w-full max-w-[250px] mx-auto", imgClass: "w-full aspect-square" },
+};
 
 function AdItem({ ad, format, onImpression }: { ad: Ad; format: AdFormat; onImpression: (id: string) => void }) {
   const recorded = useRef(false);
@@ -26,53 +62,32 @@ function AdItem({ ad, format, onImpression }: { ad: Ad; format: AdFormat; onImpr
 
   if (!ad.imageId) return null;
 
-  if (format === "banner") {
-    return (
-      <div>
-        <p className="text-[10px] text-muted-foreground text-center mb-0.5 uppercase tracking-wide leading-none">
-          Patrocinado
-        </p>
-        <div className="mx-auto max-w-[468px]">
-          <a
-            href={ad.linkUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleClick}
-            className="block overflow-hidden rounded border border-border"
-            title={ad.title}
-          >
-            <img
-              src={getFileView(ad.imageId)}
-              alt={ad.title}
-              className="w-full h-[60px] object-cover"
-              loading="lazy"
-            />
-          </a>
-        </div>
-      </div>
-    );
-  }
+  const dims = FORMAT_DIMENSIONS[format];
+  const isHorizontal = format === "banner" || format === "leaderboard";
+  const labelAlign = isHorizontal ? "text-center mb-0.5" : "text-right mb-0.5";
 
   return (
     <div>
-      <p className="text-[10px] text-muted-foreground text-right mb-0.5 uppercase tracking-wide leading-none">
+      <p className={`text-[10px] text-muted-foreground ${labelAlign} uppercase tracking-wide leading-none`}>
         Patrocinado
       </p>
-      <a
-        href={ad.linkUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={handleClick}
-        className="block overflow-hidden rounded-md"
-        title={ad.title}
-      >
-        <img
-          src={getFileView(ad.imageId)}
-          alt={ad.title}
-          className="w-full h-auto object-cover"
-          loading="lazy"
-        />
-      </a>
+      <div className={dims.containerClass}>
+        <a
+          href={ad.linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className="block overflow-hidden rounded-md"
+          title={ad.title}
+        >
+          <img
+            src={getFileView(ad.imageId)}
+            alt={ad.title}
+            className={`w-full object-cover ${dims.imgClass}`}
+            loading="lazy"
+          />
+        </a>
+      </div>
     </div>
   );
 }
@@ -88,7 +103,10 @@ export function AdBanner({ page, format, className, maxCount = 1 }: AdBannerProp
       try {
         const allAds = await listAds(true);
         const matching = allAds.filter(
-          (a) => a.format === format && (a.pages.includes(page) || a.pages.includes("all"))
+          (a) =>
+            a.format === format &&
+            (a.pages.includes(page) || a.pages.includes("all")) &&
+            !hasReachedDailyLimit(a)
         );
         // Shuffle and take up to maxCount (random rotation on each page load)
         const shuffled = [...matching].sort(() => Math.random() - 0.5);
@@ -107,6 +125,7 @@ export function AdBanner({ page, format, className, maxCount = 1 }: AdBannerProp
   }, [page, format, maxCount]);
 
   const handleImpression = useCallback((id: string) => {
+    trackDailyImpression(id);
     incrementAdImpression(id).catch(() => {});
   }, []);
 

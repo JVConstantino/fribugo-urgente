@@ -11,6 +11,8 @@ import ArticlePage from '@/pages/ArticlePage'
 import CategoryPage from '@/pages/CategoryPage'
 import SearchPage from '@/pages/SearchPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import GroupsPage from '@/pages/GroupsPage'
+import SendNewsPage from '@/pages/SendNewsPage'
 
 import LoginPage from '@/pages/admin/LoginPage'
 import DashboardPage from '@/pages/admin/DashboardPage'
@@ -18,8 +20,10 @@ import ArticlesPage from '@/pages/admin/ArticlesPage'
 import CategoriesPage from '@/pages/admin/CategoriesPage'
 import ArticleEditorPage from '@/pages/admin/ArticleEditorPage'
 import AdsPage from '@/pages/admin/AdsPage'
-import GroupsPage from '@/pages/GroupsPage'
+import PopupsPage from '@/pages/admin/PopupsPage'
 import GroupsAdminPage from '@/pages/admin/GroupsAdminPage'
+import UserNewsPage from '@/pages/admin/UserNewsPage'
+import SettingsPage from '@/pages/admin/SettingsPage'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -50,6 +54,7 @@ export default function App() {
           <Route path="/categoria/:slug" element={<CategoryPage />} />
           <Route path="/buscar" element={<SearchPage />} />
           <Route path="/grupos" element={<GroupsPage />} />
+          <Route path="/enviar-noticia" element={<SendNewsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -71,7 +76,10 @@ export default function App() {
           <Route path="artigos/:id/editar" element={<ArticleEditorPage />} />
           <Route path="categorias" element={<CategoriesPage />} />
           <Route path="anuncios" element={<AdsPage />} />
+          <Route path="popups" element={<PopupsPage />} />
           <Route path="grupos" element={<GroupsAdminPage />} />
+          <Route path="noticias-internautas" element={<UserNewsPage />} />
+          <Route path="configuracoes" element={<SettingsPage />} />
         </Route>
       </Routes>
 

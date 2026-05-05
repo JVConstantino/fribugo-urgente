@@ -8,7 +8,10 @@ import {
   Menu,
   X,
   Megaphone,
+  AlertCircle,
   MessageCircle,
+  Inbox,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +24,10 @@ const adminNavItems = [
   { label: "Artigos", href: "/admin/artigos", icon: FileText },
   { label: "Categorias", href: "/admin/categorias", icon: FolderOpen },
   { label: "Anúncios", href: "/admin/anuncios", icon: Megaphone },
+  { label: "Popups", href: "/admin/popups", icon: AlertCircle },
   { label: "Grupos WhatsApp", href: "/admin/grupos", icon: MessageCircle },
+  { label: "Notícias Internautas", href: "/admin/noticias-internautas", icon: Inbox },
+  { label: "Configurações", href: "/admin/configuracoes", icon: Settings },
 ];
 
 export function AdminLayout() {

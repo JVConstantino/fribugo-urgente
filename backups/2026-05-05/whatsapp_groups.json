@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Friburgo Noticias 01",
+    "description": "Grupo de noticias 01",
+    "link": "https://lexical.dev/docs/api/",
+    "category": "Noticias",
+    "imageId": "69e0bce5000a7013fc94",
+    "isActive": true,
+    "sortOrder": 0,
+    "$id": "69e0bcf30000a2c71333",
+    "$sequence": 1,
+    "$createdAt": "2026-05-03T23:56:54.581+00:00",
+    "$updatedAt": "2026-05-03T23:56:54.581+00:00",
+    "$permissions": [],
+    "$databaseId": "friburgourgente",
+    "$collectionId": "whatsapp_groups"
+  }
+]

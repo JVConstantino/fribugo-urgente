@@ -30,6 +30,7 @@ import {
 import { formatRelativeDate, truncate, getReadingTime } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { AdBanner } from "@/components/shared/AdBanner";
+import PopupBanner from "@/components/shared/PopupBanner";
 
 export default function HomePage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -167,6 +168,7 @@ export default function HomePage() {
 
   return (
     <div>
+      <PopupBanner />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Hero Section */}
         {loading ? (

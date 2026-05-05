@@ -116,6 +116,7 @@ export interface Ad {
   isActive: boolean;
   impressions: number;
   clicks: number;
+  dailyLimit: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -129,6 +130,7 @@ export interface CreateAdData {
   startsAt: string;
   endsAt: string;
   isActive: boolean;
+  dailyLimit: number | null;
 }
 
 export interface UpdateAdData {
@@ -140,6 +142,7 @@ export interface UpdateAdData {
   startsAt?: string;
   endsAt?: string;
   isActive?: boolean;
+  dailyLimit?: number | null;
 }
 
 // ===== WhatsApp Groups =====
@@ -176,6 +179,119 @@ export interface UpdateWhatsAppGroupData {
   isActive?: boolean;
   sortOrder?: number;
 }
+
+// ===== User News (notícias enviadas por internautas) =====
+
+export type UserNewsStatus = "pending" | "processing" | "processed" | "rejected";
+
+export interface UserNews {
+  id: string;
+  title: string;
+  categoryId: string | null;
+  description: string;
+  location: string;
+  whatHappened: string;
+  mediaIds: string[];
+  authorName: string;
+  authorPhone: string;
+  authorEmail: string;
+  status: UserNewsStatus;
+  aiSummary: string | null;
+  aiCategory: string | null;
+  aiAnalysis: string | null;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserNewsData {
+  title: string;
+  categoryId: string | null;
+  description: string;
+  location: string;
+  whatHappened: string;
+  mediaIds: string[];
+  authorName: string;
+  authorPhone: string;
+  authorEmail: string;
+}
+
+export interface UpdateUserNewsData {
+  title?: string;
+  categoryId?: string | null;
+  description?: string;
+  location?: string;
+  whatHappened?: string;
+  mediaIds?: string[];
+  authorName?: string;
+  authorPhone?: string;
+  authorEmail?: string;
+  status?: UserNewsStatus;
+  aiSummary?: string | null;
+  aiCategory?: string | null;
+  aiAnalysis?: string | null;
+  adminNotes?: string | null;
+}
+
+// ===== AI Config =====
+
+export interface AIConfig {
+  id: string;
+  provider: string;
+  apiKey: string;
+  endpoint: string;
+  model: string;
+  systemPrompt: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveAIConfigData {
+  provider: string;
+  apiKey: string;
+  endpoint: string;
+  model: string;
+  systemPrompt: string;
+  isActive: boolean;
+}
+
+// ===== Popups =====
+
+export type PopupType = "image" | "group";
+
+export interface Popup {
+  id: string;
+  title: string;
+  type: PopupType;
+  imageId: string | null;
+  linkUrl: string | null;
+  groupId: string | null;
+  heading: string | null;
+  description: string | null;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  impressions: number;
+  clicks: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePopupData {
+  title: string;
+  type: PopupType;
+  imageId: string | null;
+  linkUrl: string | null;
+  groupId: string | null;
+  heading: string | null;
+  description: string | null;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+}
+
+export type UpdatePopupData = Partial<CreatePopupData>;
 
 // ===== Appwrite Document Helper =====
 

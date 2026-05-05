@@ -42,3 +42,31 @@ export const RELATED_ARTICLES_COUNT = 4;
 
 /** Regex pattern for slug validation */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Maximum file upload size for user media (30 MB - Appwrite limit) */
+export const MAX_USER_MEDIA_SIZE = 30 * 1024 * 1024;
+
+/** Allowed video MIME types for user uploads */
+export const ALLOWED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+];
+
+/** Allowed image MIME types for user uploads */
+export const ALLOWED_USER_MEDIA_TYPES = [
+  ...ALLOWED_IMAGE_TYPES,
+  ...ALLOWED_VIDEO_TYPES,
+];
+
+/** Maximum number of media files per submission */
+export const MAX_MEDIA_FILES = 5;
+
+/** Rate limit: max submissions per day per browser */
+export const MAX_DAILY_SUBMISSIONS = 3;
+
+/** hCaptcha site key */
+export const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY as string;
+
+/** Popup cooldown in days */
+export const POPUP_COOLDOWN_DAYS = 7;
