@@ -8,6 +8,8 @@ import {
   Send,
   Loader2,
   AlertTriangle,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import {
   listArticles,
@@ -41,6 +43,9 @@ export default function HomePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterName, setNewsletterName] = useState("");
+  const [newsletterPhone, setNewsletterPhone] = useState("");
+  const [newsletterChannel, setNewsletterChannel] = useState<"email" | "whatsapp" | "both">("email");
   const [subscribing, setSubscribing] = useState(false);
   const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
 
@@ -142,20 +147,22 @@ export default function HomePage() {
     const trimmed = newsletterEmail.trim();
     if (!trimmed) return;
 
+    if ((newsletterChannel === "whatsapp" || newsletterChannel === "both") && !newsletterPhone.trim()) {
+      toast({ title: "Telefone obrigatório", description: "Informe seu WhatsApp para este canal.", variant: "destructive" });
+      return;
+    }
+
     setSubscribing(true);
     try {
-      await subscribe(trimmed);
-      toast({
-        title: "Inscricao realizada!",
-        description: "Voce recebera as principais noticies no seu e-mail.",
+      await subscribe(trimmed, {
+        name: newsletterName.trim() || undefined,
+        phone: newsletterPhone.trim() || undefined,
+        channel: newsletterChannel,
       });
-      setNewsletterEmail("");
+      toast({ title: "Inscrição realizada!", description: "Você receberá as principais notícias em breve." });
+      setNewsletterEmail(""); setNewsletterName(""); setNewsletterPhone(""); setNewsletterChannel("email");
     } catch {
-      toast({
-        title: "Erro ao inscrever",
-        description: "Nao foi possivel realizar a inscricao. Tente novamente.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro ao inscrever", description: "Não foi possível realizar a inscrição. Tente novamente.", variant: "destructive" });
     } finally {
       setSubscribing(false);
     }
@@ -319,31 +326,57 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="mb-3 text-sm text-muted-foreground">
-                  Receba as principais noticies de {APP_NAME} no seu e-mail.
+                  Receba as principais notícias de {APP_NAME}.
                 </p>
                 <form onSubmit={handleNewsletterSubmit} className="space-y-2">
                   <Input
+                    placeholder="Seu nome (opcional)"
+                    value={newsletterName}
+                    onChange={(e) => setNewsletterName(e.target.value)}
+                    disabled={subscribing}
+                  />
+                  <Input
                     type="email"
-                    placeholder="Seu e-mail"
+                    placeholder="Seu e-mail *"
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     disabled={subscribing}
+                    required
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={subscribing || !newsletterEmail.trim()}
-                  >
+                  {/* Canal */}
+                  <div className="flex gap-1">
+                    {(["email", "whatsapp", "both"] as const).map((ch) => (
+                      <button
+                        key={ch}
+                        type="button"
+                        onClick={() => setNewsletterChannel(ch)}
+                        className={`flex-1 flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium border transition-colors ${
+                          newsletterChannel === ch
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-input hover:bg-muted"
+                        }`}
+                      >
+                        {ch === "email" && <Mail className="h-3 w-3" />}
+                        {ch === "whatsapp" && <MessageCircle className="h-3 w-3" />}
+                        {ch === "both" && <Send className="h-3 w-3" />}
+                        {ch === "email" ? "Email" : ch === "whatsapp" ? "WhatsApp" : "Ambos"}
+                      </button>
+                    ))}
+                  </div>
+                  {(newsletterChannel === "whatsapp" || newsletterChannel === "both") && (
+                    <Input
+                      type="tel"
+                      placeholder="Seu WhatsApp (ex: 5522999999999)"
+                      value={newsletterPhone}
+                      onChange={(e) => setNewsletterPhone(e.target.value)}
+                      disabled={subscribing}
+                    />
+                  )}
+                  <Button type="submit" className="w-full" disabled={subscribing || !newsletterEmail.trim()}>
                     {subscribing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Inscrevendo...
-                      </>
+                      <><Loader2 className="h-4 w-4 animate-spin" />Inscrevendo...</>
                     ) : (
-                      <>
-                        <Send className="h-4 w-4" />
-                        Inscrever-se
-                      </>
+                      <><Send className="h-4 w-4" />Inscrever-se</>
                     )}
                   </Button>
                 </form>

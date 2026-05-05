@@ -246,6 +246,71 @@ export default function ArticlePage() {
               {/* Banner ad at end of content */}
               <AdBanner page="article" format="banner" className="mt-6" />
 
+              {/* Mobile-only: share, top articles, categories, tags */}
+              <div className="lg:hidden mt-8 space-y-6">
+                {/* Share */}
+                <div>
+                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Compartilhar</h3>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                      <Copy className="h-4 w-4" />
+                      Copiar link
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleShareFacebook}>
+                      <Share2 className="h-4 w-4" />
+                      Facebook
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {article.tags && article.tags.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tags</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {article.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Categories */}
+                {allCategories.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Categorias</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allCategories.map((c) => (
+                        <Link key={c.id} to={`/categoria/${c.slug}`}>
+                          <Badge style={{ backgroundColor: c.color, color: "#fff", borderColor: "transparent" }}>
+                            {c.name}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mais lidas */}
+                {topArticles.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mais lidas</h3>
+                    <div className="space-y-3">
+                      {topArticles.map((a, i) => (
+                        <Link key={a.id} to={`/noticias/${a.slug}`} className="flex items-start gap-2 group">
+                          <span className="text-xl font-black text-muted-foreground/25 leading-tight shrink-0 w-5">{i + 1}</span>
+                          <p className="text-sm font-medium leading-snug group-hover:text-primary transition-colors line-clamp-3">{a.title}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Related Articles */}
               {relatedArticles.length > 0 && (
                 <section className="mt-12">

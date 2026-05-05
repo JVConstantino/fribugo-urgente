@@ -12,8 +12,10 @@ import {
   MapPin,
   Cloud,
   Send,
+  Mail,
+  Loader2,
 } from "lucide-react";
-import { listCategories } from "@/services/supabase";
+import { listCategories, subscribe } from "@/services/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdBanner } from "@/components/shared/AdBanner";
 import type { Category } from "@/types";
@@ -29,6 +31,10 @@ import {
   OffcanvasContent,
   OffcanvasClose,
 } from "@/components/ui/offcanvas";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 // ─── Weather helpers ─────────────────────────────────────────────────────────
 
@@ -99,6 +105,33 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [clockStr, setClockStr] = useState(() => formatClock(new Date()));
+
+  // Newsletter drawer form
+  const [nlName, setNlName] = useState("");
+  const [nlEmail, setNlEmail] = useState("");
+  const [nlPhone, setNlPhone] = useState("");
+  const [nlChannel, setNlChannel] = useState<"email" | "whatsapp" | "both">("email");
+  const [nlLoading, setNlLoading] = useState(false);
+
+  async function handleDrawerSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = nlEmail.trim();
+    if (!trimmed) return;
+    if ((nlChannel === "whatsapp" || nlChannel === "both") && !nlPhone.trim()) {
+      toast({ title: "Telefone obrigatório", description: "Informe seu WhatsApp para este canal.", variant: "destructive" });
+      return;
+    }
+    setNlLoading(true);
+    try {
+      await subscribe(trimmed, { name: nlName.trim() || undefined, phone: nlPhone.trim() || undefined, channel: nlChannel });
+      toast({ title: "Inscrição realizada!", description: "Você receberá as principais notícias em breve." });
+      setNlName(""); setNlEmail(""); setNlPhone(""); setNlChannel("email");
+    } catch {
+      toast({ title: "Erro ao inscrever", variant: "destructive" });
+    } finally {
+      setNlLoading(false);
+    }
+  }
 
   // Clock — update every second
   useEffect(() => {
@@ -414,6 +447,66 @@ export function Header() {
               <Send className="h-4 w-4" />
               Enviar notícia
             </Link>
+
+            {/* Newsletter no drawer */}
+            <div className="pt-2">
+              <Separator className="mb-3" />
+              <p className="flex items-center gap-2 px-3 text-sm font-semibold mb-3">
+                <Mail className="h-4 w-4 text-primary" />
+                Newsletter
+              </p>
+              <form onSubmit={handleDrawerSubscribe} className="space-y-2 px-1">
+                <Input
+                  placeholder="Seu nome (opcional)"
+                  value={nlName}
+                  onChange={(e) => setNlName(e.target.value)}
+                  disabled={nlLoading}
+                  className="h-9 text-sm"
+                />
+                <Input
+                  type="email"
+                  placeholder="Seu e-mail *"
+                  value={nlEmail}
+                  onChange={(e) => setNlEmail(e.target.value)}
+                  disabled={nlLoading}
+                  required
+                  className="h-9 text-sm"
+                />
+                <div className="flex gap-1">
+                  {(["email", "whatsapp", "both"] as const).map((ch) => (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => setNlChannel(ch)}
+                      className={`flex-1 flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium border transition-colors ${
+                        nlChannel === ch
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-input hover:bg-muted"
+                      }`}
+                    >
+                      {ch === "email" && <Mail className="h-3 w-3" />}
+                      {ch === "whatsapp" && <MessageCircle className="h-3 w-3" />}
+                      {ch === "both" && <Send className="h-3 w-3" />}
+                      {ch === "email" ? "Email" : ch === "whatsapp" ? "WhatsApp" : "Ambos"}
+                    </button>
+                  ))}
+                </div>
+                {(nlChannel === "whatsapp" || nlChannel === "both") && (
+                  <Input
+                    type="tel"
+                    placeholder="WhatsApp (ex: 5522999999999)"
+                    value={nlPhone}
+                    onChange={(e) => setNlPhone(e.target.value)}
+                    disabled={nlLoading}
+                    className="h-9 text-sm"
+                  />
+                )}
+                <Button type="submit" size="sm" className="w-full" disabled={nlLoading || !nlEmail.trim()}>
+                  {nlLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {nlLoading ? "Inscrevendo..." : "Inscrever-se"}
+                </Button>
+              </form>
+            </div>
 
             {isAdmin && (
               <Link
