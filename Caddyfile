@@ -1,0 +1,9 @@
+:80 {
+  root * /app/dist
+  encode gzip
+
+  # SPA routing: rewrite all non-file requests to index.html
+  try_files {path} /index.html
+
+  file_server
+}
