@@ -1,9 +1,9 @@
--- Insert admin user directly into Supabase Auth
+-- Reset admin user with correct password setup
 -- Run this in Supabase SQL Editor
 
 BEGIN;
 
--- First, delete any existing user with this email
+-- Delete existing user and related records
 DELETE FROM auth.sessions WHERE user_id IN (
   SELECT id FROM auth.users WHERE email = 'friburgourgente.portal@gmail.com'
 );
@@ -12,9 +12,14 @@ DELETE FROM auth.identities WHERE user_id IN (
   SELECT id FROM auth.users WHERE email = 'friburgourgente.portal@gmail.com'
 );
 
+DELETE FROM public.profiles WHERE id IN (
+  SELECT id FROM auth.users WHERE email = 'friburgourgente.portal@gmail.com'
+);
+
 DELETE FROM auth.users WHERE email = 'friburgourgente.portal@gmail.com';
 
--- Insert the new admin user with correct Supabase schema
+-- Insert new admin user with password using pgcrypto
+-- The password hash must match what Supabase Auth expects
 INSERT INTO auth.users (
   id,
   instance_id,
@@ -28,9 +33,9 @@ INSERT INTO auth.users (
   updated_at
 ) VALUES (
   gen_random_uuid(),
-  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-000000000000'::uuid,
   'friburgourgente.portal@gmail.com',
-  crypt('FriburgoUrgente#2026!@#$%', gen_salt('bf')),
+  crypt('FriburgoUrgente#2026!@#$%', gen_salt('bf', 12)),
   now(),
   '{"provider":"email","providers":["email"]}'::jsonb,
   '{"email_verified":true,"name":"Admin Friburgo Urgente","role":"admin"}'::jsonb,
@@ -39,12 +44,10 @@ INSERT INTO auth.users (
   now()
 );
 
--- Get the ID of the user we just created
-WITH new_user AS (
+-- Insert the identity record
+WITH user_insert AS (
   SELECT id FROM auth.users WHERE email = 'friburgourgente.portal@gmail.com'
 )
-
--- Insert the identity record (required for email login)
 INSERT INTO auth.identities (
   id,
   user_id,
@@ -56,25 +59,25 @@ INSERT INTO auth.identities (
 )
 SELECT
   gen_random_uuid(),
-  new_user.id,
+  user_insert.id,
   jsonb_build_object(
-    'sub', new_user.id::text,
+    'sub', user_insert.id::text,
     'email', 'friburgourgente.portal@gmail.com'
   ),
   'email',
   '00000000-0000-0000-0000-000000000001'::uuid,
   now(),
   now()
-FROM new_user;
+FROM user_insert;
 
 COMMIT;
 
--- Verify the user was created
-SELECT 
+-- Verify
+SELECT
   id,
   email,
   email_confirmed_at,
   created_at,
   raw_user_meta_data
-FROM auth.users 
+FROM auth.users
 WHERE email = 'friburgourgente.portal@gmail.com';

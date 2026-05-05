@@ -349,8 +349,16 @@ export async function isAdmin(): Promise<boolean> {
 
 // ===== Storage =====
 
+function sanitizeFilename(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/_+/g, '_');
+}
+
 export async function uploadFile(file: File): Promise<any> {
-  const filename = `${generateId()}_${file.name}`;
+  const filename = `${generateId()}_${sanitizeFilename(file.name)}`;
   const { data, error } = await supabase.storage.from('covers').upload(filename, file);
 
   if (error) throw error;
@@ -726,7 +734,7 @@ export async function saveSetting(key: string, value: string): Promise<void> {
 // ===== User Media Upload =====
 
 export async function uploadUserMedia(file: File): Promise<any> {
-  const filename = `${generateId()}_${file.name}`;
+  const filename = `${generateId()}_${sanitizeFilename(file.name)}`;
   const { data, error } = await supabase.storage.from('user_media').upload(filename, file);
 
   if (error) throw error;
