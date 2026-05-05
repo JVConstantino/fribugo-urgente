@@ -10,7 +10,7 @@ import {
   uploadFile,
   getFileView,
   deleteFile,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Category } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";

@@ -22,7 +22,7 @@ import {
   deleteUserNews,
   getUserMediaView,
   listCategories,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { UserNews, UserNewsStatus, Category } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

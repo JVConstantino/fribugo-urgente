@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, ExternalLink } from "lucide-react";
-import { listGroups, getFileView } from "@/services/appwrite";
+import { listGroups, getFileView } from "@/services/supabase";
 import type { WhatsAppGroup } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

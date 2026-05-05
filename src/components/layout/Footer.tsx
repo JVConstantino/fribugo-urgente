@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Send, Newspaper, LayoutGrid } from "lucide-react";
-import { subscribe } from "@/services/appwrite";
+import { subscribe } from "@/services/supabase";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

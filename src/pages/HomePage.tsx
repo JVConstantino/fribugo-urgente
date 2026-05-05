@@ -14,7 +14,7 @@ import {
   listCategories,
   getArticleCoverUrl,
   subscribe,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

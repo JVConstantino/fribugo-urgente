@@ -12,7 +12,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

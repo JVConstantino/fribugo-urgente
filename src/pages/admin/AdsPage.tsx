@@ -22,7 +22,7 @@ import {
   uploadFile,
   getFileView,
   deleteFile,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Ad, AdFormat, AdPage, CreateAdData, UpdateAdData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

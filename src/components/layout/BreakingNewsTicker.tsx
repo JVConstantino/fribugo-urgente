@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import { listArticles } from "@/services/appwrite";
+import { listArticles } from "@/services/supabase";
 import type { Article } from "@/types";
 import { BREAKING_TICKER_SPEED } from "@/lib/constants";
 

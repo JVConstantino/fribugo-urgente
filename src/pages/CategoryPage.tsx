@@ -6,7 +6,7 @@ import {
   listArticles,
   listCategories,
   getArticleCoverUrl,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

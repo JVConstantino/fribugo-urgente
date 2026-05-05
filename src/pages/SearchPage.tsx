@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, Clock, Eye, ArrowLeft, Loader2 } from "lucide-react";
-import { searchArticles, listCategories, getArticleCoverUrl } from "@/services/appwrite";
+import { searchArticles, listCategories, getArticleCoverUrl } from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

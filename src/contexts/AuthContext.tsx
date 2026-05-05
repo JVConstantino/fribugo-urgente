@@ -11,7 +11,7 @@ import {
   logout as logoutService,
   getCurrentUser,
   isAdmin as isAdminService,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { User } from "@/types";
 
 interface AuthContextValue {

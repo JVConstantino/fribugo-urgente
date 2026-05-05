@@ -14,7 +14,7 @@ import {
   listArticles,
   listCategories,
   deleteArticle,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

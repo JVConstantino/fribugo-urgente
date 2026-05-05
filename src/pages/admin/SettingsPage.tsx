@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { getAIConfig, saveAIConfig, getSetting, saveSetting } from "@/services/appwrite";
+import { getAIConfig, saveAIConfig, getSetting, saveSetting } from "@/services/supabase";
 import type { SaveAIConfigData } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

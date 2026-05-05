@@ -15,7 +15,7 @@ import {
   listArticles,
   listCategories,
   getMostViewedArticles,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { listAds, incrementAdImpression, incrementAdClick, getFileView } from "@/services/appwrite";
+import { listAds, incrementAdImpression, incrementAdClick, getFileView } from "@/services/supabase";
 import type { Ad, AdFormat, AdPage } from "@/types";
 
 // ── Daily impression tracking ──────────────────────────────────────────────

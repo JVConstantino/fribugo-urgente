@@ -13,7 +13,7 @@ import {
   Cloud,
   Send,
 } from "lucide-react";
-import { listCategories } from "@/services/appwrite";
+import { listCategories } from "@/services/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdBanner } from "@/components/shared/AdBanner";
 import type { Category } from "@/types";

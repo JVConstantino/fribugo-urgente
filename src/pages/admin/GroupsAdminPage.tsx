@@ -19,7 +19,7 @@ import {
   uploadFile,
   getFileView,
   deleteFile,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type {
   WhatsAppGroup,
   CreateWhatsAppGroupData,

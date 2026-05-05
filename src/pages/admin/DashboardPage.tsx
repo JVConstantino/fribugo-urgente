@@ -33,7 +33,7 @@ import {
   listCategories,
   getMostViewedArticles,
   listAds,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Article, Category, Ad } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

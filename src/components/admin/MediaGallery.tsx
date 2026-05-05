@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listFiles, getFileView } from "@/services/appwrite";
+import { listFiles, getFileView } from "@/services/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

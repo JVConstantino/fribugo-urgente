@@ -21,7 +21,7 @@ import {
   getFileView,
   deleteFile,
   listGroups,
-} from "@/services/appwrite";
+} from "@/services/supabase";
 import type { Popup, CreatePopupData, UpdatePopupData, PopupType, WhatsAppGroup } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listAds, incrementAdClick, getFileView } from "@/services/appwrite";
+import { listAds, incrementAdClick, getFileView } from "@/services/supabase";
 import type { Ad } from "@/types";
 
 export function SponsorSlider() {

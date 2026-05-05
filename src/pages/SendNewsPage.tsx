@@ -15,7 +15,7 @@ import {
   Mail,
   Clock,
 } from "lucide-react";
-import { listCategories, createUserNews, uploadUserMedia, deleteUserMedia, getSetting } from "@/services/appwrite";
+import { listCategories, createUserNews, uploadUserMedia, deleteUserMedia, getSetting } from "@/services/supabase";
 import { useToast } from "@/hooks/use-toast";
 import type { Category } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
