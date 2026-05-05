@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Inbox,
   Settings,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const adminNavItems = [
   { label: "Popups", href: "/admin/popups", icon: AlertCircle },
   { label: "Grupos WhatsApp", href: "/admin/grupos", icon: MessageCircle },
   { label: "Notícias Internautas", href: "/admin/noticias-internautas", icon: Inbox },
+  { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { label: "Configurações", href: "/admin/configuracoes", icon: Settings },
 ];
 

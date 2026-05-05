@@ -24,6 +24,7 @@ import PopupsPage from '@/pages/admin/PopupsPage'
 import GroupsAdminPage from '@/pages/admin/GroupsAdminPage'
 import UserNewsPage from '@/pages/admin/UserNewsPage'
 import SettingsPage from '@/pages/admin/SettingsPage'
+import NewsletterPage from '@/pages/admin/NewsletterPage'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="popups" element={<PopupsPage />} />
           <Route path="grupos" element={<GroupsAdminPage />} />
           <Route path="noticias-internautas" element={<UserNewsPage />} />
+          <Route path="newsletter" element={<NewsletterPage />} />
           <Route path="configuracoes" element={<SettingsPage />} />
         </Route>
       </Routes>

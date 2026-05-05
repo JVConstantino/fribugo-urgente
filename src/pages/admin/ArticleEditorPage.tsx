@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Loader2, Upload, X, Image } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, Image, Send } from "lucide-react";
 
 import {
   getArticleById,
@@ -10,6 +10,8 @@ import {
   uploadFile,
   getFileView,
   deleteFile,
+  getSetting,
+  triggerN8nWebhook,
 } from "@/services/supabase";
 import type { Category } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +56,10 @@ export default function ArticleEditorPage() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  // N8N dispatch flags
+  const [sendToWhatsapp, setSendToWhatsapp] = useState(false);
+  const [sendToEmail, setSendToEmail] = useState(false);
 
   // Meta
   const [categories, setCategories] = useState<Category[]>([]);
@@ -224,6 +230,7 @@ export default function ArticleEditorPage() {
 
     setSaving(true);
     try {
+      let savedId = id;
       if (isEditing && id) {
         await updateArticle(id, {
           title: title.trim(),
@@ -253,8 +260,34 @@ export default function ArticleEditorPage() {
           publishedAt: new Date(publishedAt).toISOString(),
           tags,
         });
+        savedId = created.id;
         toast({ title: "Artigo criado!" });
         navigate(`/admin/artigos/${created.id}/editar`, { replace: true });
+      }
+
+      const payload = {
+        articleId: savedId,
+        title: title.trim(),
+        slug: slug.trim(),
+        excerpt: excerpt.trim(),
+        coverUrl: coverImageId ? getFileView(coverImageId) : null,
+      };
+
+      if (sendToWhatsapp) {
+        const url = await getSetting("webhook_n8n_whatsapp");
+        if (url) {
+          triggerN8nWebhook(url, payload).catch(() => {
+            toast({ title: "Erro ao disparar webhook WhatsApp", variant: "destructive" });
+          });
+        }
+      }
+      if (sendToEmail) {
+        const url = await getSetting("webhook_n8n_email");
+        if (url) {
+          triggerN8nWebhook(url, payload).catch(() => {
+            toast({ title: "Erro ao disparar webhook Email", variant: "destructive" });
+          });
+        }
       }
     } catch {
       toast({
@@ -535,6 +568,51 @@ export default function ArticleEditorPage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* N8N Dispatch */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Send className="h-4 w-4 text-primary" />
+                Disparos N8N
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Ao salvar, dispara o webhook configurado nas Configurações.
+              </p>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Enviar no WhatsApp</label>
+                <button
+                  type="button"
+                  onClick={() => setSendToWhatsapp((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    sendToWhatsapp ? "bg-emerald-500" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      sendToWhatsapp ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Enviar por Email</label>
+                <button
+                  type="button"
+                  onClick={() => setSendToEmail((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    sendToEmail ? "bg-blue-500" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      sendToEmail ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
             </CardContent>
           </Card>
         </div>

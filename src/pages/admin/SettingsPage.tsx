@@ -48,8 +48,10 @@ export default function SettingsPage() {
     isActive: true,
   });
 
-  // Webhook
-  const [webhookUrl, setWebhookUrl] = useState("");
+  // Webhooks N8N
+  const [webhookWhatsapp, setWebhookWhatsapp] = useState("");
+  const [webhookEmail, setWebhookEmail] = useState("");
+  const [webhookUserNews, setWebhookUserNews] = useState("");
 
   // Evo API (WhatsApp)
   const [evoUrl, setEvoUrl] = useState("");
@@ -62,9 +64,11 @@ export default function SettingsPage() {
 
   async function loadSettings() {
     try {
-      const [config, whUrl, evUrl, evToken, evNumber] = await Promise.all([
+      const [config, wh_whatsapp, wh_email, wh_usernews, evUrl, evToken, evNumber] = await Promise.all([
         getAIConfig(),
-        getSetting("n8n_webhook_url"),
+        getSetting("webhook_n8n_whatsapp"),
+        getSetting("webhook_n8n_email"),
+        getSetting("webhook_n8n_user_news"),
         getSetting("evo_api_url"),
         getSetting("evo_api_token"),
         getSetting("evo_phone_number"),
@@ -80,7 +84,9 @@ export default function SettingsPage() {
           isActive: config.isActive,
         });
       }
-      if (whUrl) setWebhookUrl(whUrl);
+      if (wh_whatsapp) setWebhookWhatsapp(wh_whatsapp);
+      if (wh_email) setWebhookEmail(wh_email);
+      if (wh_usernews) setWebhookUserNews(wh_usernews);
       if (evUrl) setEvoUrl(evUrl);
       if (evToken) setEvoToken(evToken);
       if (evNumber) setEvoNumber(evNumber);
@@ -104,13 +110,17 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSaveWebhook() {
+  async function handleSaveWebhooks() {
     setSaving(true);
     try {
-      await saveSetting("n8n_webhook_url", webhookUrl);
-      toast({ title: "URL do webhook salva!" });
+      await Promise.all([
+        saveSetting("webhook_n8n_whatsapp", webhookWhatsapp),
+        saveSetting("webhook_n8n_email", webhookEmail),
+        saveSetting("webhook_n8n_user_news", webhookUserNews),
+      ]);
+      toast({ title: "Webhooks N8N salvos!" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao salvar webhook";
+      const message = err instanceof Error ? err.message : "Erro ao salvar webhooks";
       toast({ title: message, variant: "destructive" });
     } finally {
       setSaving(false);
@@ -134,18 +144,18 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleTestWebhook() {
-    if (!webhookUrl) {
+  async function handleTestWebhook(url: string) {
+    if (!url) {
       toast({ title: "Informe a URL do webhook primeiro.", variant: "destructive" });
       return;
     }
     try {
-      await fetch(webhookUrl, {
+      await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ test: true, message: "Teste de conexão do Friburgo Urgente" }),
       });
-      toast({ title: "Webhook testado! Verifique o N8n." });
+      toast({ title: "Webhook testado! Verifique o N8N." });
     } catch {
       toast({ title: "Erro ao testar webhook. Verifique a URL.", variant: "destructive" });
     }
@@ -282,37 +292,81 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* N8n Webhook */}
+      {/* Webhooks N8N */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Webhook className="h-4 w-4 text-primary" />
-            Webhook N8n
+            Webhooks N8N
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            URL do webhook do N8n que será chamado quando uma nova notícia for enviada.
-            O N8n receberá o ID da notícia e fará o processamento (IA + WhatsApp).
+            Configure as URLs dos webhooks do N8N para cada tipo de disparo. Elas serão
+            chamadas ao publicar artigos ou receber notícias de internautas.
           </p>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">URL do Webhook</label>
-            <Input
-              placeholder="https://seu-n8n.com/webhook/..."
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-            />
+
+          {/* Webhook WhatsApp */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-emerald-500" />
+              Disparo WhatsApp
+            </label>
+            <p className="text-xs text-muted-foreground">Chamado ao salvar artigo com "Enviar no WhatsApp" ativo.</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://seu-n8n.com/webhook/whatsapp"
+                value={webhookWhatsapp}
+                onChange={(e) => setWebhookWhatsapp(e.target.value)}
+              />
+              <Button variant="outline" size="icon" onClick={() => handleTestWebhook(webhookWhatsapp)}>
+                <TestTube2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleSaveWebhook} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Salvar
-            </Button>
-            <Button variant="outline" onClick={handleTestWebhook}>
-              <TestTube2 className="h-4 w-4" />
-              Testar webhook
-            </Button>
+
+          {/* Webhook Email */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-blue-500" />
+              Disparo Email
+            </label>
+            <p className="text-xs text-muted-foreground">Chamado ao salvar artigo com "Enviar por Email" ativo.</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://seu-n8n.com/webhook/email"
+                value={webhookEmail}
+                onChange={(e) => setWebhookEmail(e.target.value)}
+              />
+              <Button variant="outline" size="icon" onClick={() => handleTestWebhook(webhookEmail)}>
+                <TestTube2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+
+          {/* Webhook User News */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-orange-500" />
+              Nova Notícia de Internauta
+            </label>
+            <p className="text-xs text-muted-foreground">Chamado quando um internauta envia uma notícia pelo formulário público.</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://seu-n8n.com/webhook/user-news"
+                value={webhookUserNews}
+                onChange={(e) => setWebhookUserNews(e.target.value)}
+              />
+              <Button variant="outline" size="icon" onClick={() => handleTestWebhook(webhookUserNews)}>
+                <TestTube2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <Button onClick={handleSaveWebhooks} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Salvar webhooks
+          </Button>
         </CardContent>
       </Card>
 

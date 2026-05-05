@@ -78,6 +78,9 @@ export interface UpdateCategoryData {
 export interface Newsletter {
   id: string;
   email: string;
+  name?: string;
+  phone?: string;
+  channel: 'email' | 'whatsapp' | 'both';
   subscribedAt: string;
   isActive: boolean;
 }

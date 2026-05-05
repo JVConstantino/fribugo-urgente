@@ -275,12 +275,18 @@ function mapCategory(raw: any): Category {
 
 // ===== Newsletter =====
 
-export async function subscribe(email: string): Promise<Newsletter> {
+export async function subscribe(
+  email: string,
+  options?: { name?: string; phone?: string; channel?: 'email' | 'whatsapp' | 'both' }
+): Promise<Newsletter> {
   const { data, error } = await supabase
     .from('newsletter')
     .insert({
       id: generateId(),
       email,
+      name: options?.name ?? null,
+      phone: options?.phone ?? null,
+      channel: options?.channel ?? 'email',
       isActive: true,
       subscribedAt: new Date().toISOString(),
     })
@@ -299,10 +305,31 @@ export async function unsubscribe(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function listNewsletterSubscribers(): Promise<Newsletter[]> {
+  const { data, error } = await supabase
+    .from('newsletter')
+    .select('*')
+    .order('subscribedAt', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(mapNewsletter);
+}
+
+export async function triggerN8nWebhook(webhookUrl: string, payload: Record<string, unknown>): Promise<void> {
+  await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
 function mapNewsletter(raw: any): Newsletter {
   return {
     id: raw.id,
     email: raw.email,
+    name: raw.name ?? undefined,
+    phone: raw.phone ?? undefined,
+    channel: raw.channel ?? 'email',
     subscribedAt: raw.subscribedAt,
     isActive: raw.isActive,
   };
