@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { listPopups, getPopupById, incrementPopupImpression, incrementPopupClick, getFileView, listGroups } from "@/services/supabase";
+import { listPopups, incrementPopupImpression, incrementPopupClick, getFileView, listGroups } from "@/services/supabase";
 import type { Popup, WhatsAppGroup } from "@/types";
 import { POPUP_COOLDOWN_DAYS } from "@/lib/constants";
 

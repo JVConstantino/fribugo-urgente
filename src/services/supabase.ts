@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import type {
   Article,
   Category,
@@ -361,7 +361,13 @@ export async function listFiles(): Promise<any> {
   const { data, error } = await supabase.storage.from('covers').list();
 
   if (error) throw error;
-  return { files: data || [] };
+  return {
+    files: (data || []).map((file) => ({
+      $id: file.name,
+      name: file.name,
+      $createdAt: file.created_at || new Date().toISOString(),
+    })),
+  };
 }
 
 export function getFilePreview(fileId: string): string {

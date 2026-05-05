@@ -22,10 +22,10 @@ import {
   deleteFile,
   listGroups,
 } from "@/services/supabase";
-import type { Popup, CreatePopupData, UpdatePopupData, PopupType, WhatsAppGroup } from "@/types";
+import type { Popup, CreatePopupData, PopupType, WhatsAppGroup } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

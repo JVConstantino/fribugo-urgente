@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Models } from "appwrite";
 
 interface MediaGalleryProps {
   open: boolean;
@@ -18,7 +17,7 @@ interface MediaGalleryProps {
 }
 
 export function MediaGallery({ open, onOpenChange, onSelect }: MediaGalleryProps) {
-  const [files, setFiles] = useState<Models.File[]>([]);
+  const [files, setFiles] = useState<Array<{ $id: string; name: string; $createdAt: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 
