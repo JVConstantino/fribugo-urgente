@@ -570,6 +570,69 @@ export async function deleteGroup(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function incrementGroupClick(id: string): Promise<void> {
+  const { data } = await supabase.from('whatsapp_groups').select('clicks').eq('id', id).single();
+  await supabase.from('whatsapp_groups').update({ clicks: (data?.clicks || 0) + 1 }).eq('id', id);
+}
+
+export async function incrementGroupView(id: string): Promise<void> {
+  const { data } = await supabase.from('whatsapp_groups').select('views').eq('id', id).single();
+  await supabase.from('whatsapp_groups').update({ views: (data?.views || 0) + 1 }).eq('id', id);
+}
+
+export async function trackPageView(articleId: string): Promise<void> {
+  try {
+    const geoRes = await fetch('https://ipapi.co/json/');
+    const geo = geoRes.ok ? await geoRes.json() : {};
+    await supabase.from('page_views').insert({
+      id: generateId(),
+      article_id: articleId,
+      city: geo.city || null,
+      region: geo.region || null,
+      country: geo.country_code || 'BR',
+      referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+    });
+  } catch {
+    // fire-and-forget, never throws
+  }
+}
+
+export async function getTopCities(limit = 10): Promise<{ city: string; count: number }[]> {
+  const { data, error } = await supabase
+    .from('page_views')
+    .select('city')
+    .not('city', 'is', null);
+  if (error || !data) return [];
+  const counts: Record<string, number> = {};
+  data.forEach((r) => { if (r.city) counts[r.city] = (counts[r.city] || 0) + 1; });
+  return Object.entries(counts)
+    .map(([city, count]) => ({ city, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
+export async function getViewsByDay(days = 30): Promise<{ date: string; views: number }[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const { data, error } = await supabase
+    .from('page_views')
+    .select('viewed_at')
+    .gte('viewed_at', since.toISOString());
+  if (error || !data) return [];
+  const counts: Record<string, number> = {};
+  data.forEach((r) => {
+    const day = r.viewed_at.slice(0, 10);
+    counts[day] = (counts[day] || 0) + 1;
+  });
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1 - i));
+    const key = d.toISOString().slice(0, 10);
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return { date: label, views: counts[key] || 0 };
+  });
+}
+
 function mapGroup(raw: any): WhatsAppGroup {
   return {
     id: raw.id,
@@ -580,6 +643,8 @@ function mapGroup(raw: any): WhatsAppGroup {
     imageId: raw.imageId || null,
     isActive: raw.isActive ?? true,
     sortOrder: raw.sortOrder || 0,
+    clicks: raw.clicks || 0,
+    views: raw.views || 0,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };

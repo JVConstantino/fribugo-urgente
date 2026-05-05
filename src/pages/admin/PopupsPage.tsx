@@ -11,6 +11,10 @@ import {
   Eye,
   MousePointerClick,
   Search,
+  BarChart2,
+  TrendingUp,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import {
   listPopups,
@@ -95,6 +99,7 @@ export default function PopupsPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [groups, setGroups] = useState<WhatsAppGroup[]>([]);
+  const [analyticsPopup, setAnalyticsPopup] = useState<Popup | null>(null);
 
   useEffect(() => {
     fetchPopups();
@@ -365,6 +370,15 @@ export default function PopupsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="text-primary"
+                      title="Analytics"
+                      onClick={() => setAnalyticsPopup(popup)}
+                    >
+                      <BarChart2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEdit(popup)}
                     >
                       <Edit3 className="h-4 w-4" />
@@ -383,6 +397,89 @@ export default function PopupsPage() {
           ))}
         </div>
       )}
+
+      {/* Analytics Dialog */}
+      <Dialog open={!!analyticsPopup} onOpenChange={(o) => !o && setAnalyticsPopup(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5 text-primary" />
+              Analytics — {analyticsPopup?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {analyticsPopup && (() => {
+            const now = new Date();
+            const start = new Date(analyticsPopup.startsAt);
+            const end = new Date(analyticsPopup.endsAt);
+            const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
+            const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / 86400000));
+            const daysLeft = Math.max(0, Math.round((end.getTime() - now.getTime()) / 86400000));
+            const ctr = analyticsPopup.impressions > 0
+              ? ((analyticsPopup.clicks / analyticsPopup.impressions) * 100).toFixed(2)
+              : "0.00";
+            const isRunning = analyticsPopup.isActive && start <= now && end >= now;
+
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant={isRunning ? "default" : "secondary"}>
+                    {isRunning ? "No ar" : analyticsPopup.isActive ? "Agendado" : "Inativo"}
+                  </Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {analyticsPopup.type === "image" ? "Imagem" : "Grupo"}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <Eye className="h-4 w-4 mx-auto mb-1 text-blue-500" />
+                    <p className="text-xl font-bold">{analyticsPopup.impressions.toLocaleString("pt-BR")}</p>
+                    <p className="text-xs text-muted-foreground">Exibições</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <MousePointerClick className="h-4 w-4 mx-auto mb-1 text-emerald-500" />
+                    <p className="text-xl font-bold">{analyticsPopup.clicks.toLocaleString("pt-BR")}</p>
+                    <p className="text-xs text-muted-foreground">Cliques</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <TrendingUp className="h-4 w-4 mx-auto mb-1 text-primary" />
+                    <p className="text-xl font-bold">{ctr}%</p>
+                    <p className="text-xs text-muted-foreground">CTR</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-muted-foreground"><Calendar className="h-3.5 w-3.5" />Período</span>
+                    <span>{start.toLocaleDateString("pt-BR")} → {end.toLocaleDateString("pt-BR")}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-muted-foreground"><Clock className="h-3.5 w-3.5" />Dias restantes</span>
+                    <span className={daysLeft <= 3 ? "text-destructive font-semibold" : ""}>{daysLeft} dia{daysLeft !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Duração total</span>
+                    <span>{totalDays} dias ({daysElapsed} decorridos)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Progresso do período</span>
+                    <span>{Math.min(100, Math.round((daysElapsed / totalDays) * 100))}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${Math.min(100, (daysElapsed / totalDays) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">

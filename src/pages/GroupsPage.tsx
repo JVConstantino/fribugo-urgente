@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, ExternalLink } from "lucide-react";
-import { listGroups, getFileView } from "@/services/supabase";
+import { listGroups, getFileView, incrementGroupClick } from "@/services/supabase";
 import type { WhatsAppGroup } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +103,7 @@ function GroupCard({ group }: { group: WhatsAppGroup }) {
       target="_blank"
       rel="noopener noreferrer"
       className="group block"
+      onClick={() => incrementGroupClick(group.id).catch(() => {})}
     >
       <Card className="transition-shadow hover:shadow-md hover:border-green-300">
         <CardContent className="p-4">

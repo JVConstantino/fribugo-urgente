@@ -15,6 +15,7 @@ import {
   listArticles,
   listCategories,
   getMostViewedArticles,
+  trackPageView,
 } from "@/services/supabase";
 import type { Article, Category } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -74,8 +75,9 @@ export default function ArticlePage() {
           setArticle(found);
         }
 
-        // Increment views (fire and forget)
+        // Increment views + track city (fire and forget)
         incrementViews(found.id).catch(() => {});
+        trackPageView(found.id);
 
         // Fetch category, related articles and top viewed
         const [categories, relatedResult, topResult] = await Promise.all([

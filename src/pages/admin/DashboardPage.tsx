@@ -33,6 +33,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  AreaChart,
+  Area,
 } from "recharts";
 import {
   listArticles,
@@ -41,6 +43,8 @@ import {
   listAds,
   listNewsletterSubscribers,
   listUserNews,
+  getTopCities,
+  getViewsByDay,
 } from "@/services/supabase";
 import type { Article, Category, Ad, Newsletter, UserNews } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,11 +107,6 @@ function getDateDaysAgo(days: number): Date {
   return d;
 }
 
-function formatDay(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
 export default function DashboardPage() {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [topArticles, setTopArticles] = useState<Article[]>([]);
@@ -124,6 +123,8 @@ export default function DashboardPage() {
   const [mostViewed, setMostViewed] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [adPeriod, setAdPeriod] = useState<AdPeriod>("all");
+  const [topCities, setTopCities] = useState<{ city: string; count: number }[]>([]);
+  const [viewsByDay, setViewsByDay] = useState<{ date: string; views: number }[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,7 +133,7 @@ export default function DashboardPage() {
       const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> =>
         p.catch((e) => { console.warn("[Dashboard]", e?.message ?? e); return fallback; });
 
-      const [recent, published, drafts, breaking, top100, top5, cats, adsData, nl, userNews] =
+      const [recent, published, drafts, breaking, top100, top5, cats, adsData, nl, userNews, cities, viewsDay] =
         await Promise.all([
           safe(listArticles(undefined, 5, 0), { articles: [], total: 0 }),
           safe(listArticles({ isPublished: true }, 1, 0), { articles: [], total: 0 }),
@@ -144,6 +145,8 @@ export default function DashboardPage() {
           safe(listAds(), [] as Ad[]),
           safe(listNewsletterSubscribers(), [] as Newsletter[]),
           safe(listUserNews(), [] as UserNews[]),
+          safe(getTopCities(10), [] as { city: string; count: number }[]),
+          safe(getViewsByDay(30), [] as { date: string; views: number }[]),
         ]);
 
       if (!cancelled) {
@@ -160,6 +163,8 @@ export default function DashboardPage() {
         setAds(adsData);
         setNewsletter(nl);
         setUserNewsList(userNews);
+        setTopCities(cities);
+        setViewsByDay(viewsDay);
         setLoading(false);
       }
     }
@@ -225,17 +230,6 @@ export default function DashboardPage() {
   )
     .map(([name, views]) => ({ name, views }))
     .sort((a, b) => b.views - a.views);
-
-  // Publications per day (last 7 days)
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().slice(0, 10);
-  });
-  const pubsByDay = last7Days.map((day) => ({
-    data: formatDay(day),
-    artigos: top100Articles.filter((a) => a.publishedAt?.slice(0, 10) === day).length,
-  }));
 
   const totalImpressions = ads.reduce((s, a) => s + a.impressions, 0);
   const totalClicks = ads.reduce((s, a) => s + a.clicks, 0);
@@ -397,25 +391,33 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Charts Row 2 — Publicações por dia + Performance ads */}
+      {/* Charts Row 2 — Views por dia (linha) + Performance ads */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Publicações — últimos 7 dias
+              Acessos — últimos 30 dias
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            {loading ? <Skeleton className="h-48 w-full rounded-lg" /> : (
+            {loading ? <Skeleton className="h-48 w-full rounded-lg" /> : viewsByDay.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-12 text-center">Sem dados de acessos ainda. Os dados serão coletados conforme leitores acessarem os artigos.</p>
+            ) : (
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={pubsByDay} margin={{ left: 0, right: 8, top: 8, bottom: 8 }}>
+                <AreaChart data={viewsByDay} margin={{ left: 0, right: 8, top: 8, bottom: 8 }}>
+                  <defs>
+                    <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="data" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval={4} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [v, "Artigos"]} />
-                  <Bar dataKey="artigos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={28} />
-                </BarChart>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [v, "Acessos"]} />
+                  <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="url(#viewsGrad)" strokeWidth={2} dot={false} />
+                </AreaChart>
               </ResponsiveContainer>
             )}
           </CardContent>
@@ -444,6 +446,61 @@ export default function DashboardPage() {
           </Card>
         )}
       </div>
+
+      {/* Top Cidades */}
+      {!loading && topCities.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <BarChart2 className="h-4 w-4 text-primary" />
+              Top cidades por acesso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topCities.map(c => ({ name: c.city, acessos: c.count }))} layout="vertical" margin={{ left: 8, right: 20, top: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [v, "Acessos"]} />
+                <Bar dataKey="acessos" fill="#8b5cf6" radius={[0, 6, 6, 0]} barSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Heatmap de categorias */}
+      {!loading && categories.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <FolderOpen className="h-4 w-4 text-primary" />
+              Distribuição de artigos por categoria
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {categories.map((cat) => {
+                const count = top100Articles.filter(a => a.categoryId === cat.id).length;
+                const maxCount = Math.max(...categories.map(c => top100Articles.filter(a => a.categoryId === c.id).length), 1);
+                const intensity = count / maxCount;
+                return (
+                  <div
+                    key={cat.id}
+                    className="rounded-lg p-3 text-center transition-transform hover:scale-105"
+                    style={{ backgroundColor: `${cat.color}${Math.round(intensity * 0.8 * 255).toString(16).padStart(2, '0')}` }}
+                  >
+                    <p className="text-2xl font-bold" style={{ color: intensity > 0.5 ? '#fff' : cat.color }}>{count}</p>
+                    <p className="text-xs font-medium mt-1 truncate" style={{ color: intensity > 0.5 ? '#ffffffcc' : 'inherit' }}>{cat.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: intensity > 0.5 ? '#ffffff99' : 'hsl(var(--muted-foreground))' }}>artigos</p>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Anúncios com filtro de período */}
       <Card>

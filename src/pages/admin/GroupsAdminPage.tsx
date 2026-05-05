@@ -10,6 +10,8 @@ import {
   ToggleLeft,
   ToggleRight,
   GripVertical,
+  MousePointerClick,
+  Eye,
 } from "lucide-react";
 import {
   listGroups,
@@ -266,6 +268,16 @@ export default function GroupsAdminPage() {
                         {group.description}
                       </p>
                     )}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1">
+                        <MousePointerClick className="h-3 w-3" />
+                        {(group.clicks || 0).toLocaleString("pt-BR")} cliques
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {(group.views || 0).toLocaleString("pt-BR")} views
+                      </span>
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <Button

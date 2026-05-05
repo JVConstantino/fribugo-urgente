@@ -54,11 +54,12 @@ export function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-card transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-card transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center justify-between px-4">
+        {/* Header — fixo */}
+        <div className="flex h-16 shrink-0 items-center justify-between px-4">
           <Link to="/admin" className="text-lg font-bold text-primary" onClick={() => setSidebarOpen(false)}>
             {APP_NAME}
           </Link>
@@ -74,7 +75,8 @@ export function AdminLayout() {
 
         <Separator />
 
-        <nav className="flex-1 space-y-1 p-3">
+        {/* Nav — rola */}
+        <nav className="flex-1 overflow-y-auto space-y-1 p-3">
           {adminNavItems.map((item) => (
             <Link
               key={item.href}
@@ -90,7 +92,8 @@ export function AdminLayout() {
 
         <Separator />
 
-        <div className="p-3 space-y-2">
+        {/* Footer — sempre visível */}
+        <div className="shrink-0 p-3 space-y-2">
           <Link
             to="/"
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-primary"
@@ -108,14 +111,14 @@ export function AdminLayout() {
         </div>
 
         {user && (
-          <div className="border-t p-3">
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+          <div className="shrink-0 border-t p-3">
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         )}
       </aside>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         {/* Top bar */}
         <header className="flex h-16 items-center gap-4 border-b px-4 lg:px-6">
           <Button

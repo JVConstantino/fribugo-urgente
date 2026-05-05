@@ -159,6 +159,8 @@ export interface WhatsAppGroup {
   imageId: string | null;
   isActive: boolean;
   sortOrder: number;
+  clicks: number;
+  views: number;
   createdAt: string;
   updatedAt: string;
 }

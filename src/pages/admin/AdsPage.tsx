@@ -13,6 +13,10 @@ import {
   Eye,
   Search,
   XCircle,
+  TrendingUp,
+  Calendar,
+  Clock,
+  Target,
 } from "lucide-react";
 import {
   listAds,
@@ -133,6 +137,7 @@ export default function AdsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
   const [filterFormat, setFilterFormat] = useState<AdFormat | "all">("all");
+  const [analyticsAd, setAnalyticsAd] = useState<Ad | null>(null);
 
   useEffect(() => {
     fetchAds();
@@ -449,6 +454,15 @@ export default function AdsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-primary"
+                        title="Analytics"
+                        onClick={() => setAnalyticsAd(ad)}
+                      >
+                        <BarChart2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8"
                         title="Editar"
                         onClick={() => openEdit(ad)}
@@ -472,6 +486,112 @@ export default function AdsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Analytics Dialog */}
+      <Dialog open={!!analyticsAd} onOpenChange={(o) => !o && setAnalyticsAd(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5 text-primary" />
+              Analytics — {analyticsAd?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {analyticsAd && (() => {
+            const now = new Date();
+            const start = new Date(analyticsAd.startsAt);
+            const end = new Date(analyticsAd.endsAt);
+            const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
+            const daysElapsed = Math.max(0, Math.round((now.getTime() - start.getTime()) / 86400000));
+            const daysLeft = Math.max(0, Math.round((end.getTime() - now.getTime()) / 86400000));
+            const ctr = analyticsAd.impressions > 0
+              ? ((analyticsAd.clicks / analyticsAd.impressions) * 100).toFixed(2)
+              : "0.00";
+            const avgDailyImpressions = daysElapsed > 0
+              ? Math.round(analyticsAd.impressions / daysElapsed)
+              : 0;
+            const projectedTotal = avgDailyImpressions * totalDays;
+            const isRunning = analyticsAd.isActive && start <= now && end >= now;
+
+            return (
+              <div className="space-y-4">
+                {/* Status */}
+                <div className="flex items-center gap-2">
+                  <Badge variant={isRunning ? "default" : "secondary"}>
+                    {isRunning ? "No ar" : analyticsAd.isActive ? "Agendado" : "Inativo"}
+                  </Badge>
+                  <Badge variant="outline">{FORMAT_LABELS[analyticsAd.format]}</Badge>
+                  <Badge variant="outline">{analyticsAd.pages.map(p => PAGE_LABELS[p]).join(", ")}</Badge>
+                </div>
+
+                {/* Métricas principais */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <Eye className="h-4 w-4 mx-auto mb-1 text-blue-500" />
+                    <p className="text-xl font-bold">{analyticsAd.impressions.toLocaleString("pt-BR")}</p>
+                    <p className="text-xs text-muted-foreground">Impressões</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <MousePointerClick className="h-4 w-4 mx-auto mb-1 text-emerald-500" />
+                    <p className="text-xl font-bold">{analyticsAd.clicks.toLocaleString("pt-BR")}</p>
+                    <p className="text-xs text-muted-foreground">Cliques</p>
+                  </div>
+                  <div className="rounded-lg bg-muted p-3 text-center">
+                    <TrendingUp className="h-4 w-4 mx-auto mb-1 text-primary" />
+                    <p className="text-xl font-bold">{ctr}%</p>
+                    <p className="text-xs text-muted-foreground">CTR</p>
+                  </div>
+                </div>
+
+                {/* Período */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-muted-foreground"><Calendar className="h-3.5 w-3.5" />Período</span>
+                    <span>{start.toLocaleDateString("pt-BR")} → {end.toLocaleDateString("pt-BR")}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-muted-foreground"><Clock className="h-3.5 w-3.5" />Dias restantes</span>
+                    <span className={daysLeft <= 3 ? "text-destructive font-semibold" : ""}>{daysLeft} dia{daysLeft !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Duração total</span>
+                    <span>{totalDays} dias ({daysElapsed} decorridos)</span>
+                  </div>
+                  {analyticsAd.dailyLimit && (
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-muted-foreground"><Target className="h-3.5 w-3.5" />Limite diário</span>
+                      <span>{analyticsAd.dailyLimit.toLocaleString("pt-BR")} impressões/dia</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Média diária</span>
+                    <span>{avgDailyImpressions.toLocaleString("pt-BR")} impressões/dia</span>
+                  </div>
+                  {avgDailyImpressions > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Projeção total</span>
+                      <span className="text-primary font-medium">~{projectedTotal.toLocaleString("pt-BR")} impressões</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Progresso do período */}
+                <div>
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Progresso do período</span>
+                    <span>{Math.min(100, Math.round((daysElapsed / totalDays) * 100))}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (daysElapsed / totalDays) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
