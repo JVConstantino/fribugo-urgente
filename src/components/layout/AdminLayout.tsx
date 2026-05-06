@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  LineChart,
   FileText,
   FolderOpen,
   LogOut,
@@ -22,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Análises", href: "/admin/analises", icon: LineChart },
   { label: "Artigos", href: "/admin/artigos", icon: FileText },
   { label: "Categorias", href: "/admin/categorias", icon: FolderOpen },
   { label: "Anúncios", href: "/admin/anuncios", icon: Megaphone },

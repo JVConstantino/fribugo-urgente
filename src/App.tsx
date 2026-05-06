@@ -13,9 +13,11 @@ import SearchPage from '@/pages/SearchPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import GroupsPage from '@/pages/GroupsPage'
 import SendNewsPage from '@/pages/SendNewsPage'
+import PrivacyPage from '@/pages/PrivacyPage'
 
 import LoginPage from '@/pages/admin/LoginPage'
 import DashboardPage from '@/pages/admin/DashboardPage'
+import AnalyticsPage from '@/pages/admin/AnalyticsPage'
 import ArticlesPage from '@/pages/admin/ArticlesPage'
 import CategoriesPage from '@/pages/admin/CategoriesPage'
 import ArticleEditorPage from '@/pages/admin/ArticleEditorPage'
@@ -56,6 +58,7 @@ export default function App() {
           <Route path="/buscar" element={<SearchPage />} />
           <Route path="/grupos" element={<GroupsPage />} />
           <Route path="/enviar-noticia" element={<SendNewsPage />} />
+          <Route path="/privacidade" element={<PrivacyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -72,6 +75,7 @@ export default function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="analises" element={<AnalyticsPage />} />
           <Route path="artigos" element={<ArticlesPage />} />
           <Route path="artigos/novo" element={<ArticleEditorPage />} />
           <Route path="artigos/:id/editar" element={<ArticleEditorPage />} />

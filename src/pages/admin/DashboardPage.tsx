@@ -6,10 +6,8 @@ import {
   Eye,
   Edit3,
   Plus,
-  TrendingUp,
   Clock,
   Zap,
-  BarChart2,
   Trophy,
   Megaphone,
   ArrowUpRight,
@@ -19,23 +17,11 @@ import {
   AlertCircle,
   Settings,
   MessageCircle,
-  Users,
   MousePointerClick,
+  LineChart,
+  BarChart2,
+  TrendingUp,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-} from "recharts";
 import {
   listArticles,
   listCategories,
@@ -43,8 +29,6 @@ import {
   listAds,
   listNewsletterSubscribers,
   listUserNews,
-  getTopCities,
-  getViewsByDay,
 } from "@/services/supabase";
 import type { Article, Category, Ad, Newsletter, UserNews } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,14 +36,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { formatRelativeDate, truncate } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/utils";
 
-const CHART_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e",
-  "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4",
-];
-
-type AdPeriod = "week" | "month" | "all";
 
 const StatCard = ({
   icon: Icon,
@@ -100,17 +78,10 @@ const StatCard = ({
   </Card>
 );
 
-function getDateDaysAgo(days: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
 
 export default function DashboardPage() {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [topArticles, setTopArticles] = useState<Article[]>([]);
-  const [top100Articles, setTop100Articles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
@@ -122,9 +93,6 @@ export default function DashboardPage() {
   const [totalViews, setTotalViews] = useState(0);
   const [mostViewed, setMostViewed] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
-  const [adPeriod, setAdPeriod] = useState<AdPeriod>("all");
-  const [topCities, setTopCities] = useState<{ city: string; count: number }[]>([]);
-  const [viewsByDay, setViewsByDay] = useState<{ date: string; views: number }[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,20 +101,18 @@ export default function DashboardPage() {
       const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> =>
         p.catch((e) => { console.warn("[Dashboard]", e?.message ?? e); return fallback; });
 
-      const [recent, published, drafts, breaking, top100, top5, cats, adsData, nl, userNews, cities, viewsDay] =
+      const [recent, published, drafts, breaking, top100, top5, cats, adsData, nl, userNews] =
         await Promise.all([
           safe(listArticles(undefined, 5, 0), { articles: [], total: 0 }),
           safe(listArticles({ isPublished: true }, 1, 0), { articles: [], total: 0 }),
           safe(listArticles({ isPublished: false }, 1, 0), { articles: [], total: 0 }),
           safe(listArticles({ isBreaking: true }, 1, 0), { articles: [], total: 0 }),
           safe(listArticles({ isPublished: true }, 100, 0), { articles: [], total: 0 }),
-          safe(getMostViewedArticles(10), [] as Article[]),
+          safe(getMostViewedArticles(5), [] as Article[]),
           safe(listCategories(), [] as Category[]),
           safe(listAds(), [] as Ad[]),
           safe(listNewsletterSubscribers(), [] as Newsletter[]),
           safe(listUserNews(), [] as UserNews[]),
-          safe(getTopCities(10), [] as { city: string; count: number }[]),
-          safe(getViewsByDay(30), [] as { date: string; views: number }[]),
         ]);
 
       if (!cancelled) {
@@ -158,13 +124,10 @@ export default function DashboardPage() {
         setTotalViews(top100.articles.reduce((sum, a) => sum + (a.views || 0), 0));
         setMostViewed(top5[0] ?? null);
         setTopArticles(top5);
-        setTop100Articles(top100.articles);
         setCategories(cats);
         setAds(adsData);
         setNewsletter(nl);
         setUserNewsList(userNews);
-        setTopCities(cities);
-        setViewsByDay(viewsDay);
         setLoading(false);
       }
     }
@@ -191,45 +154,10 @@ export default function DashboardPage() {
     rejected: userNewsList.filter((u) => u.status === "rejected").length,
   };
 
-  // Ads period filter
   const now = new Date();
-  const weekAgo = getDateDaysAgo(7);
-  const monthAgo = getDateDaysAgo(30);
-
-  const filteredAds = ads.filter((ad) => {
-    if (adPeriod === "all") return true;
-    const cutoff = adPeriod === "week" ? weekAgo : monthAgo;
-    return new Date(ad.endsAt) >= cutoff;
-  });
-
   const activeAdsCount = ads.filter((a) => {
     return a.isActive && new Date(a.startsAt) <= now && new Date(a.endsAt) >= now;
   }).length;
-
-  // Charts
-  const topViewsChartData = topArticles
-    .filter((a) => a.views > 0)
-    .map((a) => ({ name: truncate(a.title, 30), views: a.views }));
-
-  const adPerformanceData = ads
-    .filter((a) => a.impressions > 0 || a.clicks > 0)
-    .sort((a, b) => b.impressions - a.impressions)
-    .slice(0, 8)
-    .map((a) => ({
-      name: truncate(a.title, 22),
-      impressões: a.impressions,
-      cliques: a.clicks,
-    }));
-
-  const catViewsData = Object.entries(
-    top100Articles.reduce((acc, a) => {
-      const cat = categoryMap.get(a.categoryId);
-      if (cat) acc[cat.name] = (acc[cat.name] || 0) + a.views;
-      return acc;
-    }, {} as Record<string, number>)
-  )
-    .map(([name, views]) => ({ name, views }))
-    .sort((a, b) => b.views - a.views);
 
   const totalImpressions = ads.reduce((s, a) => s + a.impressions, 0);
   const totalClicks = ads.reduce((s, a) => s + a.clicks, 0);
@@ -237,15 +165,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Visão geral do portal</p>
         </div>
-        <Button asChild>
-          <Link to="/admin/artigos/novo">
-            <Plus className="h-4 w-4" />
-            Novo artigo
+        <Button asChild variant="outline" className="text-sm">
+          <Link to="/admin/analises">
+            <LineChart className="h-4 w-4" />
+            Ver análises completas
           </Link>
         </Button>
       </div>
@@ -341,246 +269,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Charts Row 1 — Artigos mais lidos + Views por categoria */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <BarChart2 className="h-4 w-4 text-primary" />
-              Artigos mais lidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {loading ? <Skeleton className="h-64 w-full rounded-lg" /> : topViewsChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-12 text-center">Sem dados de views ainda.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={topViewsChartData} layout="vertical" margin={{ left: 4, right: 20, top: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [(Number(v)).toLocaleString("pt-BR"), "Views"]} />
-                  <Bar dataKey="views" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-primary" />
-              Views por categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {loading ? <Skeleton className="h-64 w-full rounded-lg" /> : catViewsData.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-12 text-center">Sem dados ainda.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={catViewsData} dataKey="views" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={50} paddingAngle={2} label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
-                    {catViewsData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="hsl(var(--card))" strokeWidth={2} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [(Number(v)).toLocaleString("pt-BR"), "Views"]} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 — Views por dia (linha) + Performance ads */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              Acessos — últimos 30 dias
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {loading ? <Skeleton className="h-48 w-full rounded-lg" /> : viewsByDay.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-12 text-center">Sem dados de acessos ainda. Os dados serão coletados conforme leitores acessarem os artigos.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={viewsByDay} margin={{ left: 0, right: 8, top: 8, bottom: 8 }}>
-                  <defs>
-                    <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval={4} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [v, "Acessos"]} />
-                  <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" fill="url(#viewsGrad)" strokeWidth={2} dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        {adPerformanceData.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Megaphone className="h-4 w-4 text-primary" />
-                Performance dos anúncios
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={adPerformanceData} margin={{ left: 4, right: 16, top: 8, bottom: 32 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} angle={-25} textAnchor="end" interval={0} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
-                  <Bar dataKey="impressões" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={14} />
-                  <Bar dataKey="cliques" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={14} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Top Cidades */}
-      {!loading && topCities.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <BarChart2 className="h-4 w-4 text-primary" />
-              Top cidades por acesso
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={topCities.map(c => ({ name: c.city, acessos: c.count }))} layout="vertical" margin={{ left: 8, right: 20, top: 8, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(v) => [v, "Acessos"]} />
-                <Bar dataKey="acessos" fill="#8b5cf6" radius={[0, 6, 6, 0]} barSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Heatmap de categorias */}
-      {!loading && categories.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <FolderOpen className="h-4 w-4 text-primary" />
-              Distribuição de artigos por categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {categories.map((cat) => {
-                const count = top100Articles.filter(a => a.categoryId === cat.id).length;
-                const maxCount = Math.max(...categories.map(c => top100Articles.filter(a => a.categoryId === c.id).length), 1);
-                const intensity = count / maxCount;
-                return (
-                  <div
-                    key={cat.id}
-                    className="rounded-lg p-3 text-center transition-transform hover:scale-105"
-                    style={{ backgroundColor: `${cat.color}${Math.round(intensity * 0.8 * 255).toString(16).padStart(2, '0')}` }}
-                  >
-                    <p className="text-2xl font-bold" style={{ color: intensity > 0.5 ? '#fff' : cat.color }}>{count}</p>
-                    <p className="text-xs font-medium mt-1 truncate" style={{ color: intensity > 0.5 ? '#ffffffcc' : 'inherit' }}>{cat.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: intensity > 0.5 ? '#ffffff99' : 'hsl(var(--muted-foreground))' }}>artigos</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Anúncios com filtro de período */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Megaphone className="h-4 w-4 text-primary" />
-              Anúncios
-            </CardTitle>
-            <div className="flex gap-1">
-              {(["week", "month", "all"] as AdPeriod[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setAdPeriod(p)}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                    adPeriod === p ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {p === "week" ? "Semana" : p === "month" ? "Mês" : "Todos"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-4 space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : filteredAds.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Nenhum anúncio encontrado.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Formato</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Impressões</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Cliques</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">CTR</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Período</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAds.map((ad) => {
-                    const adCtr = ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : "0.0";
-                    const isRunning = ad.isActive && new Date(ad.startsAt) <= now && new Date(ad.endsAt) >= now;
-                    return (
-                      <tr key={ad.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 font-medium">
-                          <Link to="/admin/anuncios" className="hover:text-primary transition-colors line-clamp-1">
-                            {ad.title}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground capitalize">{ad.format}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">{ad.impressions.toLocaleString("pt-BR")}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">{ad.clicks.toLocaleString("pt-BR")}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`font-semibold ${Number(adCtr) > 2 ? "text-emerald-600" : "text-muted-foreground"}`}>
-                            {adCtr}%
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant={isRunning ? "default" : "secondary"} className="text-xs">
-                            {isRunning ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {new Date(ad.startsAt).toLocaleDateString("pt-BR")} →{" "}
-                          {new Date(ad.endsAt).toLocaleDateString("pt-BR")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Quick Actions + Recent + Top */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -710,36 +398,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Newsletter inscritos por canal */}
-      {!loading && newsletterActive > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              Inscritos newsletter por canal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-                <Mail className="h-6 w-6 text-blue-500 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-blue-600">{newsletterByChannel.email}</p>
-                <p className="text-xs text-muted-foreground">Email</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                <MessageCircle className="h-6 w-6 text-emerald-500 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-emerald-600">{newsletterByChannel.whatsapp}</p>
-                <p className="text-xs text-muted-foreground">WhatsApp</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-purple-50 dark:bg-purple-950/30">
-                <Users className="h-6 w-6 text-purple-500 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-purple-600">{newsletterByChannel.both}</p>
-                <p className="text-xs text-muted-foreground">Ambos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

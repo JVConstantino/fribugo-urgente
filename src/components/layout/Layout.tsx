@@ -3,6 +3,7 @@ import { BreakingNewsTicker } from "./BreakingNewsTicker";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SponsorSlider } from "@/components/shared/SponsorSlider";
+import { CookieBanner } from "@/components/shared/CookieBanner";
 
 export function Layout() {
   return (
@@ -14,6 +15,7 @@ export function Layout() {
       </main>
       <SponsorSlider />
       <Footer />
+      <CookieBanner />
     </div>
   );
 }

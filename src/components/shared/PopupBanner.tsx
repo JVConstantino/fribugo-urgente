@@ -101,7 +101,7 @@ export default function PopupBanner() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md p-0 overflow-hidden" onEscapeKeyDown={handleClose}>
+      <DialogContent className="max-w-md p-0 overflow-hidden max-h-[90vh] overflow-y-auto" onEscapeKeyDown={handleClose}>
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 z-10 rounded-full bg-white/80 hover:bg-white p-2 transition"
@@ -142,8 +142,8 @@ export default function PopupBanner() {
             {group && (
               <div className="p-6">
                 {group.imageId && imageUrl && (
-                  <div className="w-full h-32 rounded-lg overflow-hidden mb-4">
-                    <img src={imageUrl} alt={group.title} className="w-full h-full object-cover" />
+                  <div className="w-full rounded-lg overflow-hidden mb-4">
+                    <img src={imageUrl} alt={group.title} className="w-full h-auto max-h-64 object-contain" />
                   </div>
                 )}
                 {!group.imageId && (

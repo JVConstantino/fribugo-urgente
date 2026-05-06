@@ -70,3 +70,6 @@ export const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY as strin
 
 /** Popup cooldown in days */
 export const POPUP_COOLDOWN_DAYS = 7;
+
+/** Cookie consent banner reset interval in days */
+export const COOKIE_CONSENT_DAYS = 30;

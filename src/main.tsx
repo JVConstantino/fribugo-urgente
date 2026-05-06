@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider } from '@/contexts/AuthContext'
 import './styles/globals.css'
+import 'leaflet/dist/leaflet.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
