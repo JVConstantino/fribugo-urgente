@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Search, Clock, Eye, ArrowLeft, Loader2 } from "lucide-react";
 import { searchArticles, listCategories, getArticleCoverUrl } from "@/services/supabase";
 import type { Article, Category } from "@/types";
@@ -13,6 +14,7 @@ import { formatRelativeDate, truncate, getReadingTime } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
 
 export default function SearchPage() {
+  const { showViews } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [inputValue, setInputValue] = useState(query);
@@ -199,10 +201,12 @@ export default function SearchPage() {
                           {formatRelativeDate(article.publishedAt)}
                         </span>
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </span>
+                          {showViews && (
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {article.views}
+                            </span>
+                          )}
                           <span>{getReadingTime(article.content)} min</span>
                         </div>
                       </div>

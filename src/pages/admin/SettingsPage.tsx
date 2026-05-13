@@ -10,6 +10,7 @@ import {
   TestTube2,
   CheckCircle2,
   XCircle,
+  BarChart2,
 } from "lucide-react";
 import { getAIConfig, saveAIConfig, getSetting, saveSetting } from "@/services/supabase";
 import type { SaveAIConfigData } from "@/types";
@@ -48,6 +49,10 @@ export default function SettingsPage() {
     isActive: true,
   });
 
+  // Portal settings
+  const [showViews, setShowViews] = useState(true);
+  const [savingPortal, setSavingPortal] = useState(false);
+
   // Webhooks N8N
   const [webhookWhatsapp, setWebhookWhatsapp] = useState("");
   const [webhookEmail, setWebhookEmail] = useState("");
@@ -64,7 +69,7 @@ export default function SettingsPage() {
 
   async function loadSettings() {
     try {
-      const [config, wh_whatsapp, wh_email, wh_usernews, evUrl, evToken, evNumber] = await Promise.all([
+      const [config, wh_whatsapp, wh_email, wh_usernews, evUrl, evToken, evNumber, showViewsSetting] = await Promise.all([
         getAIConfig(),
         getSetting("webhook_n8n_whatsapp"),
         getSetting("webhook_n8n_email"),
@@ -72,6 +77,7 @@ export default function SettingsPage() {
         getSetting("evo_api_url"),
         getSetting("evo_api_token"),
         getSetting("evo_phone_number"),
+        getSetting("show_views"),
       ]);
 
       if (config) {
@@ -84,6 +90,7 @@ export default function SettingsPage() {
           isActive: config.isActive,
         });
       }
+      if (showViewsSetting !== null) setShowViews(showViewsSetting === "true");
       if (wh_whatsapp) setWebhookWhatsapp(wh_whatsapp);
       if (wh_email) setWebhookEmail(wh_email);
       if (wh_usernews) setWebhookUserNews(wh_usernews);
@@ -107,6 +114,18 @@ export default function SettingsPage() {
       toast({ title: message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSavePortal() {
+    setSavingPortal(true);
+    try {
+      await saveSetting("show_views", showViews ? "true" : "false");
+      toast({ title: "Configurações do portal salvas!" });
+    } catch {
+      toast({ title: "Erro ao salvar configurações", variant: "destructive" });
+    } finally {
+      setSavingPortal(false);
     }
   }
 
@@ -196,6 +215,43 @@ export default function SettingsPage() {
           <p className="text-xs text-muted-foreground mt-2">
             E o bucket de storage: <Badge variant="outline" className="text-xs font-mono">user_media</Badge>
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Portal Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart2 className="h-4 w-4 text-primary" />
+            Configurações do Portal
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+            <div>
+              <p className="text-sm font-medium">Exibir contador de visualizações</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Mostra o número de views em artigos, home, categorias e busca. As visualizações continuam sendo computadas independente desta configuração.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowViews((v) => !v)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                showViews ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transition-transform ${
+                  showViews ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+          <Button onClick={handleSavePortal} disabled={savingPortal}>
+            {savingPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Salvar configurações do portal
+          </Button>
         </CardContent>
       </Card>
 

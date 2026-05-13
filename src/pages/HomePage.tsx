@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   Eye,
   Clock,
@@ -35,6 +36,7 @@ import { AdBanner } from "@/components/shared/AdBanner";
 import PopupBanner from "@/components/shared/PopupBanner";
 
 export default function HomePage() {
+  const { showViews } = useSettings();
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -181,7 +183,7 @@ export default function HomePage() {
         {loading ? (
           <HeroSkeleton />
         ) : featuredArticle ? (
-          <HeroSection article={featuredArticle} category={categoryMap.get(featuredArticle.categoryId)} />
+          <HeroSection article={featuredArticle} category={categoryMap.get(featuredArticle.categoryId)} showViews={showViews} />
         ) : null}
 
         {/* Breaking News Badge */}
@@ -236,6 +238,7 @@ export default function HomePage() {
                       key={article.id}
                       article={article}
                       category={categoryMap.get(article.categoryId)}
+                      showViews={showViews}
                     />
                   ))}
                 </div>
@@ -298,10 +301,12 @@ export default function HomePage() {
                           <p className="text-sm font-medium leading-snug group-hover:text-primary transition-colors line-clamp-2">
                             {article.title}
                           </p>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </div>
+                          {showViews && (
+                            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                              <Eye className="h-3 w-3" />
+                              {article.views}
+                            </div>
+                          )}
                         </div>
                       </Link>
                       {index < trendingArticles.length - 1 && (
@@ -392,9 +397,11 @@ export default function HomePage() {
 function HeroSection({
   article,
   category,
+  showViews,
 }: {
   article: Article;
   category?: Category;
+  showViews: boolean;
 }) {
   const coverUrl = getArticleCoverUrl(article);
 
@@ -438,10 +445,12 @@ function HeroSection({
               <Clock className="h-3.5 w-3.5" />
               {formatRelativeDate(article.publishedAt)}
             </span>
-            <span className="flex items-center gap-1">
-              <Eye className="h-3.5 w-3.5" />
-              {article.views}
-            </span>
+            {showViews && (
+              <span className="flex items-center gap-1">
+                <Eye className="h-3.5 w-3.5" />
+                {article.views}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <ChevronRight className="h-3.5 w-3.5" />
               {getReadingTime(article.content)} min de leitura
@@ -456,9 +465,11 @@ function HeroSection({
 function ArticleCard({
   article,
   category,
+  showViews,
 }: {
   article: Article;
   category?: Category;
+  showViews: boolean;
 }) {
   const coverUrl = getArticleCoverUrl(article);
 
@@ -516,10 +527,12 @@ function ArticleCard({
             <Clock className="h-3 w-3" />
             {formatRelativeDate(article.publishedAt)}
           </span>
-          <span className="flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            {article.views}
-          </span>
+          {showViews && (
+            <span className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              {article.views}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Clock, Eye, ArrowLeft, Loader2 } from "lucide-react";
 import {
   getCategory,
@@ -18,6 +19,7 @@ import { formatRelativeDate, truncate, getReadingTime } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
 
 export default function CategoryPage() {
+  const { showViews } = useSettings();
   const { slug } = useParams<{ slug: string }>();
   const [category, setCategory] = useState<Category | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -213,10 +215,12 @@ export default function CategoryPage() {
                           {formatRelativeDate(article.publishedAt)}
                         </span>
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </span>
+                          {showViews && (
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {article.views}
+                            </span>
+                          )}
                           <span>{getReadingTime(article.content)} min</span>
                         </div>
                       </div>

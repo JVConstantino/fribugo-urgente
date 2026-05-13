@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useParams, Link } from "react-router-dom";
 import {
   Clock,
@@ -47,6 +48,7 @@ function splitContent(html: string): [string, string] {
 }
 
 export default function ArticlePage() {
+  const { showViews } = useSettings();
   const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<Article | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
@@ -221,10 +223,12 @@ export default function ArticlePage() {
                   <Clock className="h-4 w-4" />
                   {formatRelativeDate(article.publishedAt)}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  {article.views} visualizacoes
-                </span>
+                {showViews && (
+                  <span className="flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    {article.views} visualizações
+                  </span>
+                )}
                 <span>{readingTime} min de leitura</span>
               </div>
 
