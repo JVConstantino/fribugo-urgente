@@ -1,0 +1,14 @@
+=== VARIÁVEIS DE AMBIENTE PARA EASYPANEL ===
+
+Cole estas variáveis nas "Environment Variables" do EasyPanel:
+
+VITE_SUPABASE_URL=https://friburgourgente-supabase.veuxld.easypanel.host
+
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc3OTU0NDIyLCJleHAiOjE4MDk0OTA0MjJ9.i9A7jVLimVQ40_BggroJUS0o4IIvaa3LXlOiDsoO1HM
+
+JWT_SECRET=f47ac10b-58cc-4372-a567-0e02b2c3d479-7a8b9c0d-1e2f-3g4h-5i6j-7k8l9m0n1o2p
+
+SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3Nzc5NTQ0MjIsImV4cCI6MTgwOTQ5MDQyMn0.1p4Z9LklAfgf4kYR1z3Gps0_nzl6SsN5fb8DT_s56RI
+
+=== PRONTO! ===
+Coloque esses 4 valores e faça rebuild/redeploy da aplicação.
