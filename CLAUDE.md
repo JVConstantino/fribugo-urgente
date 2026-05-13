@@ -10,19 +10,11 @@ Migração Appwrite → Supabase concluída. Site carrega dados normalmente, mas
 - GoTrue version: v2.184.0
 - Schema migration auth: `20251201000000`
 
-## Credenciais de teste
-- Email admin: `friburgourgente.portal@gmail.com`
-- Senha: `FriburgoUrgente#2026!@#$%`
-- User UUID: `aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`
-
-## JWT_SECRET configurado
-`f47ac10b-58cc-4372-a567-0e02b2c3d479-7a8b9c0d-1e2f-3g4h-5i6j-7k8l9m0n1o2p`
-
-## Chaves geradas com esse secret
-- ANON_KEY: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc3OTU0NDIyLCJleHAiOjE4MDk0OTA0MjJ9.i9A7jVLimVQ40_BggroJUS0o4IIvaa3LXlOiDsoO1HM`
-- SERVICE_ROLE_KEY: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3Nzc5NTQ0MjIsImV4cCI6MTgwOTQ5MDQyMn0.1p4Z9LklAfgf4kYR1z3Gps0_nzl6SsN5fb8DT_s56RI`
-
-Essas chaves estão configuradas no `.env`, no EasyPanel `ANON_KEY`/`SERVICE_ROLE_KEY` e batem com o `JWT_SECRET`.
+## Credenciais e chaves
+⚠️ **NUNCA committar credenciais, senhas ou chaves JWT no Git!**
+- Credenciais de teste estão no `.env.local` (git-ignored)
+- `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY` configuradas no EasyPanel como variáveis de ambiente
+- `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` estão no `.env` (apenas as públicas)
 
 ## O que foi feito (em ordem cronológica)
 
