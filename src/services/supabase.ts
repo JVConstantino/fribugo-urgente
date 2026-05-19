@@ -108,6 +108,11 @@ export async function createArticle(data: CreateArticleData): Promise<Article> {
       content: data.content,
       excerpt: data.excerpt,
       coverImageId: data.coverImageId,
+      videoFileId: data.videoFileId ?? null,
+      videoThumbnailImageId: data.videoThumbnailImageId ?? null,
+      videoDurationSeconds: data.videoDurationSeconds ?? null,
+      videoEnabled: data.videoEnabled ?? false,
+      videoCaption: data.videoCaption ?? '',
       categoryId: data.categoryId,
       authorId: data.authorId,
       isBreaking: data.isBreaking,
@@ -157,6 +162,11 @@ function mapArticle(raw: any): Article {
     content: raw.content,
     excerpt: raw.excerpt,
     coverImageId: raw.coverImageId || null,
+    videoFileId: raw.videoFileId || null,
+    videoThumbnailImageId: raw.videoThumbnailImageId || null,
+    videoDurationSeconds: raw.videoDurationSeconds ?? null,
+    videoEnabled: raw.videoEnabled ?? false,
+    videoCaption: raw.videoCaption || '',
     categoryId: raw.categoryId,
     authorId: raw.authorId,
     isBreaking: raw.isBreaking,
@@ -201,6 +211,20 @@ export async function getMostViewedArticles(limit: number = 5): Promise<Article[
     .select('*')
     .eq('isPublished', true)
     .order('views', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []).map(mapArticle);
+}
+
+export async function listVideoArticles(limit: number = 12): Promise<Article[]> {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('isPublished', true)
+    .eq('videoEnabled', true)
+    .not('videoFileId', 'is', null)
+    .order('publishedAt', { ascending: false })
     .limit(limit);
 
   if (error) throw error;
@@ -423,6 +447,45 @@ export async function deleteFile(fileId: string): Promise<void> {
 export function getArticleCoverUrl(article: Article): string | null {
   if (!article.coverImageId) return null;
   return getFileView(article.coverImageId);
+}
+
+export async function uploadArticleVideo(file: File): Promise<any> {
+  const filename = `${generateId()}_${sanitizeFilename(file.name)}`;
+  const { data, error } = await supabase.storage.from('user_media').upload(filename, file);
+
+  if (error) throw error;
+  return { $id: `user_media/${data.path}` };
+}
+
+export async function deleteArticleVideo(fileId: string): Promise<void> {
+  const { bucket, path } = parseStorageRef(fileId, 'article_videos');
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  if (error) throw error;
+}
+
+export function getArticleVideoUrl(articleOrFileId: Article | string | null): string | null {
+  const fileId = typeof articleOrFileId === 'string' ? articleOrFileId : articleOrFileId?.videoFileId;
+  if (!fileId) return null;
+  const { bucket, path } = parseStorageRef(fileId, 'article_videos');
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data?.publicUrl || null;
+}
+
+export function getArticleVideoThumbnailUrl(article: Article): string | null {
+  if (article.videoThumbnailImageId) return getFileView(article.videoThumbnailImageId);
+  return getArticleCoverUrl(article);
+}
+
+function parseStorageRef(ref: string, defaultBucket: string): { bucket: string; path: string } {
+  const knownBuckets = ['article_videos', 'user_media', 'covers'];
+  const slashIndex = ref.indexOf('/');
+  if (slashIndex > 0) {
+    const possibleBucket = ref.slice(0, slashIndex);
+    if (knownBuckets.includes(possibleBucket)) {
+      return { bucket: possibleBucket, path: ref.slice(slashIndex + 1) };
+    }
+  }
+  return { bucket: defaultBucket, path: ref };
 }
 
 // ===== Ads =====

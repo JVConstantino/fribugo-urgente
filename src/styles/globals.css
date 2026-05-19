@@ -73,21 +73,39 @@ body {
 
 @keyframes ticker-scroll {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
 .breaking-ticker {
-  display: inline-block;
+  display: flex;
+  width: max-content;
   white-space: nowrap;
-  animation: ticker-scroll var(--ticker-duration, 30s) linear infinite;
+  animation: ticker-scroll var(--ticker-duration, 90s) linear infinite;
 }
 
 .breaking-ticker:hover {
   animation-play-state: paused;
+}
+
+.breaking-ticker-group {
+  display: flex;
+  min-width: max-content;
+}
+
+.breaking-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.breaking-ticker-separator {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+  opacity: 0.6;
 }
 
 /* ===== Prose Styles (Article Content) ===== */
@@ -195,6 +213,20 @@ body {
 .prose h2 + p,
 .prose h3 + p {
   margin-top: 0;
+}
+
+/* Admin rich text editor should use the full editing column, unlike article prose. */
+.rich-text-editor .prose {
+  max-width: none;
+}
+
+.rich-text-editor [contenteditable="true"] p,
+.rich-text-editor [contenteditable="true"] h2,
+.rich-text-editor [contenteditable="true"] h3,
+.rich-text-editor [contenteditable="true"] blockquote,
+.rich-text-editor [contenteditable="true"] ul,
+.rich-text-editor [contenteditable="true"] ol {
+  max-width: none;
 }
 
 /* ===== Focus Styles ===== */

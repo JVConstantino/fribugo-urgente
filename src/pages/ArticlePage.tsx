@@ -12,6 +12,8 @@ import {
 import {
   getArticle,
   getArticleCoverUrl,
+  getArticleVideoThumbnailUrl,
+  getArticleVideoUrl,
   incrementViews,
   listArticles,
   listCategories,
@@ -159,6 +161,8 @@ export default function ArticlePage() {
   }
 
   const coverUrl = getArticleCoverUrl(article);
+  const videoUrl = getArticleVideoUrl(article);
+  const videoPosterUrl = getArticleVideoThumbnailUrl(article) || coverUrl;
   const readingTime = getReadingTime(article.content);
   const [contentFirst, contentSecond] = splitContent(article.content);
 
@@ -233,6 +237,23 @@ export default function ArticlePage() {
               </div>
 
               <Separator className="mb-8" />
+
+              {videoUrl && (
+                <div className="mb-8 overflow-hidden rounded-lg border bg-black">
+                  <video
+                    src={videoUrl}
+                    poster={videoPosterUrl || undefined}
+                    controls
+                    playsInline
+                    className="max-h-[620px] w-full bg-black object-contain"
+                  />
+                  {article.videoCaption && (
+                    <div className="bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground">
+                      {article.videoCaption}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Content — split with banner ad in middle */}
               <div

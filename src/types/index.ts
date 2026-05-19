@@ -7,6 +7,11 @@ export interface Article {
   content: string;
   excerpt: string;
   coverImageId: string | null;
+  videoFileId: string | null;
+  videoThumbnailImageId: string | null;
+  videoDurationSeconds: number | null;
+  videoEnabled: boolean;
+  videoCaption: string;
   categoryId: string;
   authorId: string;
   isBreaking: boolean;
@@ -24,6 +29,11 @@ export interface CreateArticleData {
   content: string;
   excerpt: string;
   coverImageId: string | null;
+  videoFileId?: string | null;
+  videoThumbnailImageId?: string | null;
+  videoDurationSeconds?: number | null;
+  videoEnabled?: boolean;
+  videoCaption?: string;
   categoryId: string;
   authorId: string;
   isBreaking: boolean;
@@ -38,6 +48,11 @@ export interface UpdateArticleData {
   content?: string;
   excerpt?: string;
   coverImageId?: string | null;
+  videoFileId?: string | null;
+  videoThumbnailImageId?: string | null;
+  videoDurationSeconds?: number | null;
+  videoEnabled?: boolean;
+  videoCaption?: string;
   categoryId?: string;
   authorId?: string;
   isBreaking?: boolean;

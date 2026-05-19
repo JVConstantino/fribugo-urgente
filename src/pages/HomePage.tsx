@@ -15,6 +15,7 @@ import {
 import {
   listArticles,
   listCategories,
+  listVideoArticles,
   getArticleCoverUrl,
   subscribe,
 } from "@/services/supabase";
@@ -34,6 +35,7 @@ import { formatRelativeDate, truncate, getReadingTime } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { AdBanner } from "@/components/shared/AdBanner";
 import PopupBanner from "@/components/shared/PopupBanner";
+import { VideoReelsCarousel } from "@/components/shared/VideoReelsCarousel";
 
 export default function HomePage() {
   const { showViews } = useSettings();
@@ -50,6 +52,7 @@ export default function HomePage() {
   const [newsletterChannel, setNewsletterChannel] = useState<"email" | "whatsapp" | "both">("email");
   const [subscribing, setSubscribing] = useState(false);
   const [trendingArticles, setTrendingArticles] = useState<Article[]>([]);
+  const [videoArticles, setVideoArticles] = useState<Article[]>([]);
 
   const fetchArticles = useCallback(
     async (pageNum: number, categoryId: string | null, append: boolean) => {
@@ -96,6 +99,22 @@ export default function HomePage() {
       }
     }
     fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchVideos() {
+      try {
+        const videos = await listVideoArticles(12);
+        if (!cancelled) setVideoArticles(videos);
+      } catch {
+        if (!cancelled) setVideoArticles([]);
+      }
+    }
+    fetchVideos();
     return () => {
       cancelled = true;
     };
@@ -185,6 +204,10 @@ export default function HomePage() {
         ) : featuredArticle ? (
           <HeroSection article={featuredArticle} category={categoryMap.get(featuredArticle.categoryId)} showViews={showViews} />
         ) : null}
+
+        {!loading && (
+          <VideoReelsCarousel articles={videoArticles} categories={categories} />
+        )}
 
         {/* Breaking News Badge */}
         {articles.some((a) => a.isBreaking) && (

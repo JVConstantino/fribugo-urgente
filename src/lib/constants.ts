@@ -21,10 +21,13 @@ export const DEFAULT_CATEGORY_COLORS = [
 export const ITEMS_PER_PAGE = 12;
 
 /** Speed of the breaking news ticker in seconds */
-export const BREAKING_TICKER_SPEED = 30;
+export const BREAKING_TICKER_SPEED = 90;
 
 /** Maximum file upload size in bytes (5 MB) */
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+/** Maximum article video upload size in bytes (80 MB) */
+export const MAX_ARTICLE_VIDEO_SIZE = 80 * 1024 * 1024;
 
 /** Allowed image MIME types for cover uploads */
 export const ALLOWED_IMAGE_TYPES = [
@@ -49,7 +52,6 @@ export const MAX_USER_MEDIA_SIZE = 30 * 1024 * 1024;
 /** Allowed video MIME types for user uploads */
 export const ALLOWED_VIDEO_TYPES = [
   "video/mp4",
-  "video/quicktime",
   "video/webm",
 ];
 

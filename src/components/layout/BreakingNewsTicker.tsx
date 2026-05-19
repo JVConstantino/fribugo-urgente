@@ -42,9 +42,24 @@ export function BreakingNewsTicker() {
     return null;
   }
 
-  const headlines = articles
-    .map((article) => article.title)
-    .join("  \u2022\u2022\u2022  ");
+  const renderHeadlines = (hidden?: boolean) => (
+    <div className="breaking-ticker-group" aria-hidden={hidden}>
+      {articles.map((article) => (
+        <span key={`${hidden ? "copy" : "main"}-${article.id}`} className="breaking-ticker-item">
+          <Link
+            to={`/noticias/${article.slug}`}
+            className="hover:underline hover:opacity-90 transition-opacity"
+            tabIndex={hidden ? -1 : undefined}
+          >
+            {article.title}
+          </Link>
+          <span className="breaking-ticker-separator" aria-hidden="true">
+            {"\u2022\u2022\u2022"}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
 
   return (
     <div className="bg-primary text-primary-foreground overflow-hidden">
@@ -60,22 +75,8 @@ export function BreakingNewsTicker() {
               ["--ticker-duration" as string]: `${BREAKING_TICKER_SPEED}s`,
             }}
           >
-            {articles.map((article, index) => (
-              <span key={article.id}>
-                <Link
-                  to={`/noticias/${article.slug}`}
-                  className="hover:underline hover:opacity-90 transition-opacity"
-                >
-                  {article.title}
-                </Link>
-                {index < articles.length - 1 && (
-                  <span className="mx-4 opacity-60">
-                    {"\u2022\u2022\u2022"}
-                  </span>
-                )}
-              </span>
-            ))}
-            <span className="mx-8 opacity-40">{headlines}</span>
+            {renderHeadlines()}
+            {renderHeadlines(true)}
           </div>
         </div>
       </div>

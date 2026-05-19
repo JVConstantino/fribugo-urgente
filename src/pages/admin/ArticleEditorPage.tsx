@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Loader2, Upload, X, Image, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, X, Image, Send, Play, Film } from "lucide-react";
 
 import {
   getArticleById,
@@ -8,8 +8,11 @@ import {
   updateArticle,
   listCategories,
   uploadFile,
+  uploadArticleVideo,
   getFileView,
+  getArticleVideoUrl,
   deleteFile,
+  deleteArticleVideo,
   getSetting,
   triggerN8nWebhook,
 } from "@/services/supabase";
@@ -22,7 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MAX_FILE_SIZE,
+  MAX_ARTICLE_VIDEO_SIZE,
   ALLOWED_IMAGE_TYPES,
+  ALLOWED_VIDEO_TYPES,
   SLUG_PATTERN,
 } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
@@ -56,6 +61,19 @@ export default function ArticleEditorPage() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  // Article video
+  const [videoFileId, setVideoFileId] = useState<string | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoThumbnailImageId, setVideoThumbnailImageId] = useState<string | null>(null);
+  const [videoThumbnailPreviewUrl, setVideoThumbnailPreviewUrl] = useState<string | null>(null);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
+  const [videoEnabled, setVideoEnabled] = useState(false);
+  const [videoCaption, setVideoCaption] = useState("");
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingVideoThumbnail, setUploadingVideoThumbnail] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoThumbnailInputRef = useRef<HTMLInputElement>(null);
 
   // N8N dispatch flags
   const [sendToWhatsapp, setSendToWhatsapp] = useState(false);
@@ -112,6 +130,15 @@ export default function ArticleEditorPage() {
         if (article.coverImageId) {
           setCoverPreviewUrl(getFileView(article.coverImageId));
         }
+        setVideoFileId(article.videoFileId);
+        setVideoPreviewUrl(getArticleVideoUrl(article));
+        setVideoThumbnailImageId(article.videoThumbnailImageId);
+        setVideoThumbnailPreviewUrl(
+          article.videoThumbnailImageId ? getFileView(article.videoThumbnailImageId) : null
+        );
+        setVideoDurationSeconds(article.videoDurationSeconds);
+        setVideoEnabled(article.videoEnabled);
+        setVideoCaption(article.videoCaption || "");
         setSlugManuallyEdited(true);
       } catch {
         toast({ title: "Erro ao carregar artigo", variant: "destructive" });
@@ -184,6 +211,111 @@ export default function ArticleEditorPage() {
     setCoverPreviewUrl(null);
   }
 
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Use MP4 ou WebM.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > MAX_ARTICLE_VIDEO_SIZE) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo é 80 MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      if (videoFileId) {
+        await deleteArticleVideo(videoFileId).catch(() => {});
+      }
+      const uploaded = await uploadArticleVideo(file);
+      const localUrl = URL.createObjectURL(file);
+      setVideoFileId(uploaded.$id);
+      setVideoPreviewUrl(getArticleVideoUrl(uploaded.$id));
+      setVideoEnabled(true);
+
+      const probe = document.createElement("video");
+      probe.preload = "metadata";
+      probe.onloadedmetadata = () => {
+        if (Number.isFinite(probe.duration)) {
+          setVideoDurationSeconds(Math.round(probe.duration));
+        }
+        URL.revokeObjectURL(localUrl);
+      };
+      probe.src = localUrl;
+    } catch {
+      toast({ title: "Erro ao enviar vídeo", variant: "destructive" });
+    } finally {
+      setUploadingVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveVideo() {
+    if (videoFileId) {
+      await deleteArticleVideo(videoFileId).catch(() => {});
+    }
+    setVideoFileId(null);
+    setVideoPreviewUrl(null);
+    setVideoDurationSeconds(null);
+    setVideoEnabled(false);
+  }
+
+  async function handleVideoThumbnailUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Use JPEG, PNG, WebP ou GIF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo é 5 MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingVideoThumbnail(true);
+    try {
+      if (videoThumbnailImageId) {
+        await deleteFile(videoThumbnailImageId).catch(() => {});
+      }
+      const uploaded = await uploadFile(file);
+      setVideoThumbnailImageId(uploaded.$id);
+      setVideoThumbnailPreviewUrl(getFileView(uploaded.$id));
+    } catch {
+      toast({ title: "Erro ao enviar thumbnail", variant: "destructive" });
+    } finally {
+      setUploadingVideoThumbnail(false);
+      if (videoThumbnailInputRef.current) videoThumbnailInputRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveVideoThumbnail() {
+    if (!videoThumbnailImageId) return;
+    await deleteFile(videoThumbnailImageId).catch(() => {});
+    setVideoThumbnailImageId(null);
+    setVideoThumbnailPreviewUrl(null);
+  }
+
   function handleSelectFromGallery(fileId: string, fileUrl: string) {
     setCoverImageId(fileId);
     setCoverPreviewUrl(fileUrl);
@@ -238,6 +370,11 @@ export default function ArticleEditorPage() {
           content,
           excerpt: excerpt.trim(),
           coverImageId,
+          videoFileId,
+          videoThumbnailImageId,
+          videoDurationSeconds,
+          videoEnabled: videoEnabled && Boolean(videoFileId),
+          videoCaption: videoCaption.trim(),
           categoryId,
           isBreaking,
           isPublished: shouldPublish,
@@ -253,6 +390,11 @@ export default function ArticleEditorPage() {
           content,
           excerpt: excerpt.trim(),
           coverImageId,
+          videoFileId,
+          videoThumbnailImageId,
+          videoDurationSeconds,
+          videoEnabled: videoEnabled && Boolean(videoFileId),
+          videoCaption: videoCaption.trim(),
           categoryId,
           authorId: user?.id ?? "",
           isBreaking,
@@ -271,6 +413,7 @@ export default function ArticleEditorPage() {
         slug: slug.trim(),
         excerpt: excerpt.trim(),
         coverUrl: coverImageId ? getFileView(coverImageId) : null,
+        videoUrl: videoFileId ? getArticleVideoUrl(videoFileId) : null,
       };
 
       if (sendToWhatsapp) {
@@ -540,6 +683,146 @@ export default function ArticleEditorPage() {
                 className="hidden"
                 onChange={handleCoverUpload}
               />
+            </CardContent>
+          </Card>
+
+          {/* Article video */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Film className="h-4 w-4 text-primary" />
+                Vídeo da notícia
+              </h3>
+
+              {videoPreviewUrl ? (
+                <div className="space-y-3">
+                  <div className="relative overflow-hidden rounded-md bg-black">
+                    <video
+                      src={videoPreviewUrl}
+                      controls
+                      playsInline
+                      className="max-h-52 w-full bg-black object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveVideo}
+                      className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={uploadingVideo}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Trocar vídeo
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => videoInputRef.current?.click()}
+                  disabled={uploadingVideo}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {uploadingVideo ? (
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  ) : (
+                    <>
+                      <Play className="h-8 w-8" />
+                      <span className="text-sm">Enviar vídeo</span>
+                      <span className="text-xs">MP4 ou WebM - máx. 80 MB</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept={ALLOWED_VIDEO_TYPES.join(",")}
+                className="hidden"
+                onChange={handleVideoUpload}
+              />
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Legenda do vídeo</label>
+                <Textarea
+                  placeholder="Texto curto para aparecer no carrossel Reels"
+                  value={videoCaption}
+                  onChange={(e) => setVideoCaption(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Mostrar no carrossel</label>
+                <button
+                  type="button"
+                  onClick={() => setVideoEnabled((v) => !v)}
+                  disabled={!videoFileId}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
+                    videoEnabled && videoFileId ? "bg-primary" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      videoEnabled && videoFileId ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Thumbnail opcional</label>
+                {videoThumbnailPreviewUrl ? (
+                  <div className="relative">
+                    <img
+                      src={videoThumbnailPreviewUrl}
+                      alt="Thumbnail do vídeo"
+                      className="max-h-40 w-full rounded-md object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveVideoThumbnail}
+                      className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => videoThumbnailInputRef.current?.click()}
+                    disabled={uploadingVideoThumbnail}
+                  >
+                    {uploadingVideoThumbnail ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Image className="h-4 w-4" />
+                    )}
+                    Usar thumbnail própria
+                  </Button>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Se não enviar thumbnail, a imagem de capa será usada no carrossel.
+                </p>
+                <input
+                  ref={videoThumbnailInputRef}
+                  type="file"
+                  accept={ALLOWED_IMAGE_TYPES.join(",")}
+                  className="hidden"
+                  onChange={handleVideoThumbnailUpload}
+                />
+              </div>
             </CardContent>
           </Card>
 

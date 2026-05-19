@@ -2,6 +2,12 @@
   root * /srv
   encode gzip
 
+  @socialBots {
+    path /noticias/*
+    header_regexp User-Agent (?i)(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)
+  }
+  reverse_proxy @socialBots 127.0.0.1:4174
+
   # SPA routing: rewrite all non-file requests to index.html
   try_files {path} /index.html
 
