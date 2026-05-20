@@ -41,6 +41,12 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
+const VIDEO_REELS_WINDOW_HOURS = 24;
+
+function getVideoReelsCutoff(): string {
+  return new Date(Date.now() - VIDEO_REELS_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+}
+
 // ===== Articles =====
 
 export async function listArticles(
@@ -224,6 +230,8 @@ export async function listVideoArticles(limit: number = 12): Promise<Article[]> 
     .eq('isPublished', true)
     .eq('videoEnabled', true)
     .not('videoFileId', 'is', null)
+    .gte('publishedAt', getVideoReelsCutoff())
+    .lte('publishedAt', new Date().toISOString())
     .order('publishedAt', { ascending: false })
     .limit(limit);
 
@@ -472,8 +480,13 @@ export function getArticleVideoUrl(articleOrFileId: Article | string | null): st
 }
 
 export function getArticleVideoThumbnailUrl(article: Article): string | null {
+  const coverUrl = getArticleCoverUrl(article);
+  const hasGeneratedThumbnail = article.videoThumbnailImageId?.includes('auto-video-thumbnail-');
+
+  if (article.videoThumbnailImageId && !hasGeneratedThumbnail) return getFileView(article.videoThumbnailImageId);
+  if (coverUrl) return coverUrl;
   if (article.videoThumbnailImageId) return getFileView(article.videoThumbnailImageId);
-  return getArticleCoverUrl(article);
+  return null;
 }
 
 function parseStorageRef(ref: string, defaultBucket: string): { bucket: string; path: string } {

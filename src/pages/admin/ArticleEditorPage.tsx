@@ -211,6 +211,72 @@ export default function ArticleEditorPage() {
     setCoverPreviewUrl(null);
   }
 
+  function extractFirstVideoFrame(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      const objectUrl = URL.createObjectURL(file);
+
+      const cleanup = () => {
+        URL.revokeObjectURL(objectUrl);
+        video.removeAttribute("src");
+        video.load();
+      };
+
+      video.preload = "metadata";
+      video.muted = true;
+      video.playsInline = true;
+
+      video.onerror = () => {
+        cleanup();
+        reject(new Error("Could not load video for thumbnail generation."));
+      };
+
+      let captured = false;
+      const captureFrame = () => {
+        if (captured) return;
+        captured = true;
+
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+
+        if (!width || !height) {
+          cleanup();
+          reject(new Error("Video dimensions are unavailable."));
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          cleanup();
+          reject(new Error("Canvas context is unavailable."));
+          return;
+        }
+
+        context.drawImage(video, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            cleanup();
+            if (!blob) {
+              reject(new Error("Could not encode video thumbnail."));
+              return;
+            }
+            resolve(new File([blob], `auto-video-thumbnail-${Date.now()}.jpg`, { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.86
+        );
+      };
+
+      video.onloadeddata = captureFrame;
+
+      video.src = objectUrl;
+    });
+  }
+
   async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -243,6 +309,20 @@ export default function ArticleEditorPage() {
       setVideoFileId(uploaded.$id);
       setVideoPreviewUrl(getArticleVideoUrl(uploaded.$id));
       setVideoEnabled(true);
+
+      if (!coverImageId && !videoThumbnailImageId) {
+        try {
+          const thumbnailFile = await extractFirstVideoFrame(file);
+          const thumbnail = await uploadFile(thumbnailFile);
+          setVideoThumbnailImageId(thumbnail.$id);
+          setVideoThumbnailPreviewUrl(getFileView(thumbnail.$id));
+        } catch {
+          toast({
+            title: "Thumbnail automÃ¡tica nÃ£o gerada",
+            description: "O vÃ­deo foi enviado, mas nÃ£o foi possÃ­vel capturar o primeiro frame.",
+          });
+        }
+      }
 
       const probe = document.createElement("video");
       probe.preload = "metadata";

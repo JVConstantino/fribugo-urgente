@@ -177,17 +177,6 @@ export default function ArticlePage() {
       </Helmet>
 
       <article>
-        {/* Cover Image */}
-        {coverUrl && (
-          <div className="relative max-h-[500px] overflow-hidden">
-            <img
-              src={coverUrl}
-              alt={article.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        )}
-
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
           {/* Back button */}
           <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
@@ -196,6 +185,16 @@ export default function ArticlePage() {
               Voltar
             </Link>
           </Button>
+
+          {coverUrl && (
+            <div className="mb-8 overflow-hidden rounded-xl border bg-muted">
+              <img
+                src={coverUrl}
+                alt={article.title}
+                className="mx-auto max-h-[340px] w-full object-contain sm:max-h-[420px] lg:max-h-[460px]"
+              />
+            </div>
+          )}
 
           <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
             {/* Main content column */}

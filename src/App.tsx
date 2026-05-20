@@ -4,12 +4,14 @@ import { useAuth } from '@/contexts/AuthContext'
 
 import { Layout } from '@/components/layout/Layout'
 import { AdminLayout } from '@/components/layout/AdminLayout'
+import { ScrollToTop } from '@/components/shared/ScrollToTop'
 import { Toaster } from '@/components/ui/Toast'
 
 import HomePage from '@/pages/HomePage'
 import ArticlePage from '@/pages/ArticlePage'
 import CategoryPage from '@/pages/CategoryPage'
 import SearchPage from '@/pages/SearchPage'
+import VideoReelsPage from '@/pages/VideoReelsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import GroupsPage from '@/pages/GroupsPage'
 import SendNewsPage from '@/pages/SendNewsPage'
@@ -49,6 +51,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <>
+      <ScrollToTop />
       <Routes>
         {/* Public routes */}
         <Route element={<Layout />}>
@@ -61,6 +64,7 @@ export default function App() {
           <Route path="/privacidade" element={<PrivacyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
+        <Route path="/videos/:slug" element={<VideoReelsPage />} />
 
         {/* Admin – login (unprotected) */}
         <Route path="/admin/login" element={<LoginPage />} />

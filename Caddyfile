@@ -3,7 +3,7 @@
   encode gzip
 
   @socialBots {
-    path /noticias/*
+    path /noticias/* /videos/*
     header_regexp User-Agent (?i)(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)
   }
   reverse_proxy @socialBots 127.0.0.1:4174
