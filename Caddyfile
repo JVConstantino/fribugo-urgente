@@ -2,9 +2,12 @@
   root * /srv
   encode gzip
 
+  @articleRoutes {
+    path /noticias/* /videos/*
+  }
+
   route {
-    reverse_proxy /noticias/* 127.0.0.1:4174
-    reverse_proxy /videos/* 127.0.0.1:4174
+    reverse_proxy @articleRoutes 127.0.0.1:4174
 
     # SPA routing: rewrite all non-file requests to index.html
     try_files {path} /index.html
