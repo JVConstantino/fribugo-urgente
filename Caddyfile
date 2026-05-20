@@ -6,10 +6,12 @@
     path /noticias/* /videos/*
     header_regexp socialbot User-Agent (?i)(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)
   }
-  reverse_proxy @socialBots 127.0.0.1:4174
+  route {
+    reverse_proxy @socialBots 127.0.0.1:4174
 
-  # SPA routing: rewrite all non-file requests to index.html
-  try_files {path} /index.html
+    # SPA routing: rewrite all non-file requests to index.html
+    try_files {path} /index.html
 
-  file_server
+    file_server
+  }
 }
