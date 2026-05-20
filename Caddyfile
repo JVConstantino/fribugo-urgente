@@ -4,7 +4,7 @@
 
   @socialBots {
     path /noticias/* /videos/*
-    header_regexp User-Agent (?i)(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)
+    header User-Agent *facebookexternalhit* *Facebot* *WhatsApp* *TelegramBot* *Twitterbot* *LinkedInBot* *Slackbot* *Discordbot*
   }
   reverse_proxy @socialBots 127.0.0.1:4174
 
