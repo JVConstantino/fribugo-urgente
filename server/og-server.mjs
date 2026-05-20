@@ -9,8 +9,10 @@ const APP_URL = process.env.APP_URL || "https://friburgourgente.com.br";
 const APP_NAME = "Friburgo Urgente";
 const DEFAULT_IMAGE = `${APP_URL}/logo.png`;
 const SPA_INDEX_PATH = process.env.SPA_INDEX_PATH || "/srv/index.html";
+const ARTICLE_CACHE_TTL_MS = 60 * 1000;
+const articleCache = new Map();
 const SOCIAL_BOT_RE =
-  /(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)/i;
+  /(facebookexternalhit|facebookexternalbot|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|googlebot|slackbot|discordbot)/i;
 
 function escapeHtml(value = "") {
   return String(value)
@@ -77,6 +79,11 @@ async function renderSpaIndex() {
 async function fetchArticle(slug) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
 
+  const cached = articleCache.get(slug);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.article;
+  }
+
   const params = new URLSearchParams({
     slug: `eq.${slug}`,
     select: "title,excerpt,slug,coverImageId,videoThumbnailImageId,videoFileId,isPublished",
@@ -94,7 +101,11 @@ async function fetchArticle(slug) {
   if (!response.ok) return null;
   const rows = await response.json();
   const article = rows?.[0];
-  if (!article || article.isPublished === false) return null;
+  if (!article || article.isPublished === false) {
+    articleCache.set(slug, { article: null, expiresAt: Date.now() + ARTICLE_CACHE_TTL_MS });
+    return null;
+  }
+  articleCache.set(slug, { article, expiresAt: Date.now() + ARTICLE_CACHE_TTL_MS });
   return article;
 }
 
@@ -161,6 +172,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     const article = await fetchArticle(slug);
+    if (!article) {
+      const html = await renderSpaIndex();
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60",
+      });
+      res.end(html);
+      return;
+    }
+
     const html = renderArticlePage(article, slug, pageType);
 
     res.writeHead(200, {
