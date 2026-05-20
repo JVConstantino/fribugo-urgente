@@ -6,15 +6,10 @@
     path /noticias/* /videos/*
     header User-Agent *facebookexternalhit* *Facebot* *WhatsApp* *TelegramBot* *Twitterbot* *LinkedInBot* *Slackbot* *Discordbot*
   }
+  reverse_proxy @socialBots 127.0.0.1:4174
 
-  handle @socialBots {
-    reverse_proxy 127.0.0.1:4174
-  }
+  # SPA routing: rewrite all non-file requests to index.html
+  try_files {path} /index.html
 
-  handle {
-    # SPA routing: rewrite all non-file requests to index.html
-    try_files {path} /index.html
-
-    file_server
-  }
+  file_server
 }
