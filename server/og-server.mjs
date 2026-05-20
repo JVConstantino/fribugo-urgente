@@ -1,4 +1,5 @@
 import http from "node:http";
+import { readFile } from "node:fs/promises";
 
 const PORT = Number(process.env.OG_SERVER_PORT || 4174);
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -7,6 +8,9 @@ const SUPABASE_ANON_KEY =
 const APP_URL = process.env.APP_URL || "https://friburgourgente.com.br";
 const APP_NAME = "Friburgo Urgente";
 const DEFAULT_IMAGE = `${APP_URL}/logo.png`;
+const SPA_INDEX_PATH = process.env.SPA_INDEX_PATH || "/srv/index.html";
+const SOCIAL_BOT_RE =
+  /(facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot)/i;
 
 function escapeHtml(value = "") {
   return String(value)
@@ -60,6 +64,14 @@ function articleImage(article, pageType) {
 
   if (article.coverImageId) return storageUrl(article.coverImageId, "covers");
   return DEFAULT_IMAGE;
+}
+
+function isSocialBot(req) {
+  return SOCIAL_BOT_RE.test(req.headers["user-agent"] || "");
+}
+
+async function renderSpaIndex() {
+  return readFile(SPA_INDEX_PATH, "utf8");
 }
 
 async function fetchArticle(slug) {
@@ -137,6 +149,17 @@ const server = http.createServer(async (req, res) => {
 
     const pageType = match[1] === "videos" ? "video" : "article";
     const slug = decodeURIComponent(match[2]);
+
+    if (!isSocialBot(req)) {
+      const html = await renderSpaIndex();
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60",
+      });
+      res.end(html);
+      return;
+    }
+
     const article = await fetchArticle(slug);
     const html = renderArticlePage(article, slug, pageType);
 
