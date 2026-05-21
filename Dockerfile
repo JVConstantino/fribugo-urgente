@@ -23,6 +23,7 @@ ENV APP_URL=${APP_URL:-https://friburgourgente.com.br}
 ENV OG_SERVER_PORT=4174
 
 COPY --from=builder /app/dist /srv
+COPY --from=builder /app/node_modules /app/node_modules
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY server /app/server
 

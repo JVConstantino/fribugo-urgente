@@ -3,7 +3,7 @@
   encode gzip
 
   @articleRoutes {
-    path /noticias/* /videos/*
+    path /noticias/* /videos/* /og-image/*
   }
 
   route {

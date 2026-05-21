@@ -1,5 +1,6 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
+import sharp from "sharp";
 
 const PORT = Number(process.env.OG_SERVER_PORT || 4174);
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -10,7 +11,13 @@ const APP_NAME = "Friburgo Urgente";
 const DEFAULT_IMAGE = `${APP_URL}/logo.png`;
 const SPA_INDEX_PATH = process.env.SPA_INDEX_PATH || "/srv/index.html";
 const ARTICLE_CACHE_TTL_MS = 60 * 1000;
+const IMAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+const OG_IMAGE_MAX_BYTES = 600 * 1024;
+const OG_IMAGE_MIN_QUALITY = 58;
 const articleCache = new Map();
+const imageCache = new Map();
 const SOCIAL_BOT_RE =
   /(facebookexternalhit|facebookexternalbot|facebot|whatsapp|telegrambot|twitterbot|linkedinbot|googlebot|slackbot|discordbot)/i;
 
@@ -68,6 +75,11 @@ function articleImage(article, pageType) {
   return DEFAULT_IMAGE;
 }
 
+function articleOgImageUrl(article, slug, pageType) {
+  const pathPrefix = pageType === "video" ? "videos" : "noticias";
+  return `${APP_URL}/og-image/${pathPrefix}/${encodeURIComponent(article?.slug || slug)}.jpg`;
+}
+
 function isSocialBot(req) {
   return SOCIAL_BOT_RE.test(req.headers["user-agent"] || "");
 }
@@ -109,6 +121,106 @@ async function fetchArticle(slug) {
   return article;
 }
 
+async function fetchImageBuffer(imageUrl) {
+  const response = await fetch(imageUrl, {
+    headers: {
+      Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      "User-Agent": `${APP_NAME} OpenGraph Image Renderer`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Image fetch failed with ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) {
+    throw new Error(`Unexpected image content type: ${contentType}`);
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+async function compressOgImage(input) {
+  let quality = 82;
+  let output = null;
+
+  do {
+    output = await sharp(input, { animated: false, limitInputPixels: 80_000_000 })
+      .rotate()
+      .resize(OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT, {
+        fit: "contain",
+        background: "#f3f4f6",
+        withoutEnlargement: false,
+      })
+      .flatten({ background: "#f3f4f6" })
+      .jpeg({
+        quality,
+        progressive: false,
+      })
+      .toBuffer();
+
+    quality -= 8;
+  } while (output.length > OG_IMAGE_MAX_BYTES && quality >= OG_IMAGE_MIN_QUALITY);
+
+  return output;
+}
+
+async function renderFallbackOgImage(title = APP_NAME) {
+  const words = String(title).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length > 34 && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+    if (lines.length === 3) break;
+  }
+
+  if (line && lines.length < 4) lines.push(line);
+  const textLines = lines.slice(0, 4).map((text, index) => {
+    const y = 260 + index * 68;
+    return `<text x="96" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="800" fill="#111827">${escapeHtml(text)}</text>`;
+  });
+
+  const svg = `<svg width="${OG_IMAGE_WIDTH}" height="${OG_IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f3f4f6"/>
+    <rect x="56" y="56" width="1088" height="518" rx="28" fill="#ffffff"/>
+    <text x="96" y="170" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#b91c1c">${APP_NAME}</text>
+    ${textLines.join("\n    ")}
+  </svg>`;
+
+  return compressOgImage(Buffer.from(svg));
+}
+
+async function renderOgImage(article, slug, pageType) {
+  const sourceImage = articleImage(article, pageType);
+  const cacheKey = `${pageType}:${slug}:${sourceImage}`;
+  const cached = imageCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.image;
+  }
+
+  let image;
+  try {
+    image = await compressOgImage(await fetchImageBuffer(sourceImage));
+  } catch {
+    image = await renderFallbackOgImage(article?.title || APP_NAME);
+  }
+
+  imageCache.set(cacheKey, {
+    image,
+    expiresAt: Date.now() + IMAGE_CACHE_TTL_MS,
+  });
+
+  return image;
+}
+
 function renderArticlePage(article, slug, pageType = "article") {
   const pathPrefix = pageType === "video" ? "videos" : "noticias";
   const canonical = `${APP_URL}/${pathPrefix}/${encodeURIComponent(article?.slug || slug)}`;
@@ -116,7 +228,7 @@ function renderArticlePage(article, slug, pageType = "article") {
   const description =
     article?.excerpt ||
     "Portal de noticias de Friburgo e regiao. Informacao em tempo real com credibilidade.";
-  const image = articleImage(article, pageType);
+  const image = articleOgImageUrl(article, slug, pageType);
   const ogType = pageType === "video" ? "video.other" : "article";
 
   return `<!doctype html>
@@ -133,6 +245,9 @@ function renderArticlePage(article, slug, pageType = "article") {
     <meta property="og:description" content="${escapeHtml(description)}">
     <meta property="og:image" content="${escapeHtml(image)}">
     <meta property="og:image:secure_url" content="${escapeHtml(image)}">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="${OG_IMAGE_WIDTH}">
+    <meta property="og:image:height" content="${OG_IMAGE_HEIGHT}">
     <meta property="og:image:alt" content="${escapeHtml(article?.title || APP_NAME)}">
     <meta property="og:url" content="${escapeHtml(canonical)}">
     <meta name="twitter:card" content="summary_large_image">
@@ -150,6 +265,32 @@ function renderArticlePage(article, slug, pageType = "article") {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+    const imageMatch = url.pathname.match(/^\/og-image\/(noticias|videos)\/([^/]+)\.jpg$/);
+
+    if (imageMatch) {
+      const pageType = imageMatch[1] === "videos" ? "video" : "article";
+      const slug = decodeURIComponent(imageMatch[2]);
+      const article = await fetchArticle(slug);
+
+      if (!article) {
+        res.writeHead(404, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=60",
+        });
+        res.end("Open Graph image not found");
+        return;
+      }
+
+      const image = await renderOgImage(article, slug, pageType);
+      res.writeHead(200, {
+        "Content-Type": "image/jpeg",
+        "Content-Length": String(image.length),
+        "Cache-Control": "public, max-age=300",
+      });
+      res.end(image);
+      return;
+    }
+
     const match = url.pathname.match(/^\/(noticias|videos)\/([^/]+)\/?$/);
 
     if (!match) {
